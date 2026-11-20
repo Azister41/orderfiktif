@@ -731,10 +731,37 @@ function copyText(text, okMsg){
 }
 
 /* ---------- lapor ---------- */
-function submitReport(e){
+// cari koordinat dari alamat lewat OpenStreetMap (Nominatim); null kalau tidak ketemu
+async function geocode(q){
+  try {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), 6000);
+    const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=id&bounded=1&viewbox=110.2,-6.9,110.65,-7.35&q=' + encodeURIComponent(q);
+    const res = await fetch(url, { signal: ctl.signal, headers: { 'Accept-Language': 'id' } });
+    clearTimeout(t);
+    const j = await res.json();
+    if (j && j[0]) return { lat: Number(Number(j[0].lat).toFixed(6)), lng: Number(Number(j[0].lon).toFixed(6)) };
+  } catch (e) { console.warn('Geocode gagal', e); }
+  return null;
+}
+
+async function submitReport(e){
   e.preventDefault();
   const form = $('#report-form');
   if (!form.checkValidity()){ form.reportValidity(); return; }
+  const btn = form.querySelector('button[type=submit]');
+  if (btn.disabled) return;
+  btn.disabled = true;
+
+  // titik peta: GPS kalau sudah dipasang, kalau tidak cari dari alamat, terakhir pakai pusat kecamatan
+  let ll = repLL, approx = false;
+  if (!ll){
+    const alamat = $('#rep-alamat').value.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
+    const kec = $('#rep-kecamatan').value;
+    toast('Mencari titik di peta...');
+    ll = await geocode(alamat + ', ' + kec + ', Semarang');
+    if (!ll){ ll = await geocode(kec + ', Semarang'); approx = !!ll; }
+  }
   const now = new Date();
   const jam = String(now.getHours()).padStart(2, '0');
   const menit = String(now.getMinutes()).padStart(2, '0');
@@ -752,15 +779,18 @@ function submitReport(e){
     confirmedByMe: true,
     createdAt: Date.now()
   });
-  if (repLL){ reports[0].lat = repLL.lat; reports[0].lng = repLL.lng; }
+  if (ll){ reports[0].lat = ll.lat; reports[0].lng = ll.lng; }
   saveReports();
   cloud.set(reports[0]);
   form.reset();
   repLL = null;
   $('#rep-locate-txt').textContent = 'Pakai lokasiku sekarang';
+  btn.disabled = false;
   homeY = 0;
   history.back();
-  setTimeout(() => toast('Laporan tersimpan di database Semarang.'), 250);
+  setTimeout(() => toast(!ll ? 'Laporan tersimpan. Titik peta belum ketemu, tandai manual di Setelan > Peta.'
+    : approx ? 'Laporan tersimpan. Titik di peta perkiraan (pusat kecamatan).'
+    : 'Laporan tersimpan dan titiknya sudah muncul di peta.'), 250);
 }
 
 /* ---------- detail ---------- */
