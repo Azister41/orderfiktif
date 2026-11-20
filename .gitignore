@@ -1,0 +1,23 @@
+# --- Firebase & Config Rahasia ---
+# Jangan sampai apiKey / config Firebase ke-upload
+.env
+.env.local
+.env*.local
+firebase-config.js
+serviceAccountKey.json
+*.key.json
+
+# --- Kalau nanti pake Node / Build Tools ---
+node_modules/
+dist/
+build/
+.vite/
+.next/
+
+# --- Sisa-sisa Editor & HP ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
