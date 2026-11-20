@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#E4EBE8" />
+<title>Panti Terdekat - Radar Order Fiktif</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --fog:#E4EBE8; --paper:#FBF7F4; --well:#EFE8E4;
+    --ink:#1D3532; --ink2:#58716D; --line:rgba(29,53,50,.12);
+    --spruce:#2E5F57; --spruce-t:#EAF1EE; --bad:#B5304E; --bad-bg:#F6E0E4; --bad-ink:#7D1F35;
+    --display:'Bricolage Grotesque','Figtree',system-ui,sans-serif;
+    --r-lg:22px; --r-md:16px;
+    --shadow:0 1px 0 #fff inset, 0 14px 26px -16px rgba(29,53,50,.38), 0 2px 6px -2px rgba(29,53,50,.12);
+  }
+  *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+  html{background:var(--fog)}
+  body{font-family:'Figtree',system-ui,sans-serif;color:var(--ink);background:var(--fog);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+  button,input,select,textarea{font:inherit;color:inherit}
+  button{cursor:pointer;border:0;background:none}
+  a{color:inherit}
+  h1,h2,h3{font-family:var(--display);letter-spacing:-.01em}
+  .i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  :focus-visible{outline:2px solid var(--spruce);outline-offset:2px}
+  .screen{max-width:480px;margin:0 auto;min-height:100dvh;position:relative;padding:0 18px 56px}
+  .contours{position:absolute;left:0;top:0;width:100%;height:300px;pointer-events:none;z-index:0;
+    -webkit-mask-image:linear-gradient(#000 45%,transparent);mask-image:linear-gradient(#000 45%,transparent)}
+  .contours svg{width:100%;height:100%;display:block}
+  .contours path{fill:none;stroke:#2E5F57;stroke-opacity:.17;stroke-width:1.2}
+  .screen>*{position:relative;z-index:1}
+  .screen>.contours{position:absolute;z-index:0}
+  .bar{padding:calc(env(safe-area-inset-top,0px) + 16px) 0 4px;display:flex}
+  .round{width:44px;height:44px;border-radius:50%;background:var(--paper);box-shadow:var(--shadow);display:grid;place-items:center;text-decoration:none}
+  .page-title{font-size:28px;line-height:1.08;font-weight:800;margin-top:10px}
+  .page-sub{color:var(--ink2);margin-top:8px;max-width:36ch}
+
+  .search{position:relative;margin-top:22px}
+  .search input{width:100%;height:52px;border-radius:26px;background:var(--paper);box-shadow:var(--shadow);padding:0 18px 0 50px;border:1.5px solid transparent;outline:0}
+  .search input:focus{border-color:var(--spruce)}
+  .search .i{position:absolute;left:18px;top:16px;color:var(--ink2)}
+  ::placeholder{color:#8DA19D}
+  .inp{width:100%;min-height:50px;border-radius:15px;background:var(--well);border:1.5px solid transparent;padding:12px 14px;outline:0;box-shadow:inset 0 2px 4px rgba(29,53,50,.09)}
+  .inp:focus{border-color:var(--spruce);background:var(--paper)}
+  select.inp{appearance:none;-webkit-appearance:none;padding-right:42px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2358716D' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+  textarea.inp{min-height:80px;resize:none}
+  .filter{margin-top:12px;display:grid;grid-template-columns:1fr auto;gap:10px}
+  .filter select{background-color:var(--paper);box-shadow:var(--shadow)}
+  .pill{height:50px;padding:0 16px;border-radius:25px;background:var(--paper);box-shadow:var(--shadow);font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+  .pill[aria-pressed="true"]{background:var(--spruce);color:#fff}
+
+  .sec{display:flex;justify-content:space-between;align-items:baseline;margin:22px 0 12px}
+  .sec h2{font-size:19px;font-weight:700}
+  .sec small{color:var(--ink2);font-size:13px}
+  .list{display:grid;gap:14px}
+  .card{padding:12px 14px 14px 12px;border-radius:var(--r-lg);background:var(--paper);box-shadow:var(--shadow)}
+  .top{display:grid;grid-template-columns:72px 1fr;gap:14px}
+  .thumb{width:72px;height:72px;border-radius:17px;background:var(--well);color:var(--spruce);display:grid;place-items:center}
+  .thumb .i{width:30px;height:30px}
+  .card h3{font-size:16px;line-height:1.2;font-weight:600}
+  .meta{font-size:13px;color:var(--ink2);margin-top:4px;overflow-wrap:anywhere}
+  .tag{display:inline-block;margin-top:6px;font-size:12px;font-weight:700;padding:2px 10px;border-radius:10px;background:var(--spruce-t);color:var(--spruce)}
+  .ra2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .btn{height:44px;border-radius:22px;padding:0 14px;font-weight:700;font-size:14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;width:100%}
+  .btn.main{background:var(--spruce);color:#fff;box-shadow:0 14px 24px -14px rgba(36,75,69,.9)}
+  .btn.ghost{background:var(--paper);box-shadow:var(--shadow)}
+  .btn.big{height:54px;border-radius:27px;margin-top:14px}
+  .adm{display:flex;gap:18px;margin-top:10px;font-size:13px;font-weight:700}
+  .adm button{color:var(--spruce)} .adm .del{color:var(--bad)}
+  .note{border-radius:var(--r-md);padding:12px 14px;font-size:14px;background:var(--paper);color:var(--ink2);box-shadow:var(--shadow);margin-top:14px}
+  .adminlink{display:block;margin:34px auto 0;font-size:11px;opacity:.3}
+
+  .sheet{position:fixed;inset:0;z-index:40;background:rgba(29,53,50,.45);display:none;align-items:flex-end;justify-content:center}
+  .sheet.on{display:flex}
+  .sheet form{width:100%;max-width:480px;max-height:92dvh;overflow-y:auto;background:var(--fog);border-radius:26px 26px 0 0;padding:20px 18px calc(env(safe-area-inset-bottom,0px) + 22px)}
+  .sheet h2{font-size:22px;font-weight:800}
+  .field{margin-top:14px}
+  .field label{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translate(-50%,-160%);background:var(--ink);color:#F3EEEA;padding:12px 18px;border-radius:24px;font-weight:600;font-size:14px;max-width:92vw;z-index:50;transition:transform .25s}
+  .toast.show{transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z"/></symbol>
+  <symbol id="i-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"/><circle cx="12" cy="12" r="8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol>
+  <symbol id="i-nav" viewBox="0 0 24 24"><path d="m3 11 18-8-8 18-2-8z"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+</svg>
+
+<main class="screen">
+  <div class="contours" aria-hidden="true">
+    <svg viewBox="0 0 400 300" preserveAspectRatio="none"><path d="M-20 120C60 60 140 40 230 70S380 40 430 10"/><path d="M-20 150C70 90 150 70 240 100S380 70 430 40"/><path d="M-20 180C80 120 160 100 250 130S380 100 430 70"/><path d="M-20 210C90 150 170 130 260 160S380 130 430 100"/><path d="M-20 240C100 180 180 160 270 190S380 160 430 130"/></svg>
+  </div>
+  <div class="bar"><a class="round" href="index.html" aria-label="Kembali"><svg class="i"><use href="#i-back"/></svg></a></div>
+  <h1 class="page-title">Panti Terdekat</h1>
+  <p class="page-sub">Kena order fiktif? Daripada dibuang, sedekahin aja ke panti asuhan di Kota dan Kabupaten Semarang.</p>
+
+  <div class="search"><svg class="i"><use href="#i-search"/></svg><input id="q" type="search" placeholder="Cari nama atau alamat panti" autocomplete="off"></div>
+  <div class="filter">
+    <select class="inp" id="fkec" aria-label="Pilih daerah"></select>
+    <button class="pill" id="near" type="button" aria-pressed="false"><svg class="i"><use href="#i-locate"/></svg>Terdekat</button>
+  </div>
+  <div id="adminbar" hidden><button class="btn main big" id="tambah" type="button"><svg class="i"><use href="#i-plus"/></svg>Tambah panti</button></div>
+
+  <div id="out"></div>
+  <button class="adminlink" id="adminbtn" type="button">Admin</button>
+</main>
+
+<div class="sheet" id="sheet">
+  <form id="form">
+    <h2 id="judul">Tambah panti</h2>
+    <div class="field"><label for="f-nama">Nama panti</label><input class="inp" id="f-nama" required maxlength="80"></div>
+    <div class="field"><label for="f-kec">Daerah (kecamatan)</label><select class="inp" id="f-kec" required></select></div>
+    <div class="field"><label for="f-alamat">Alamat lengkap</label><textarea class="inp" id="f-alamat" required maxlength="240"></textarea></div>
+    <div class="field"><label for="f-telp">Nomor telepon / WhatsApp</label><input class="inp" id="f-telp" type="tel" inputmode="tel" placeholder="0812xxxxxxx" maxlength="20"></div>
+    <div class="field"><label>Titik peta (boleh dikosongkan)</label>
+      <div class="two"><input class="inp" id="f-lat" inputmode="decimal" placeholder="Lat, -7.0..."><input class="inp" id="f-lng" inputmode="decimal" placeholder="Lng, 110.4..."></div>
+      <button class="btn ghost" id="pakailoc" type="button" style="margin-top:10px">Pakai lokasi saya sekarang</button></div>
+    <div class="two" style="margin-top:20px"><button class="btn ghost" id="batal" type="button">Batal</button><button class="btn main" type="submit">Simpan</button></div>
+  </form>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyAJwwVl16QykhyfJ42LmxU6WClF9Vs5zzw",
+  authDomain: "orderfiktif.firebaseapp.com",
+  projectId: "orderfiktif",
+  storageBucket: "orderfiktif.firebasestorage.app",
+  messagingSenderId: "302212019912",
+  appId: "1:302212019912:web:8e104f4d4a3f7b017b57fd"
+});
+const db = getFirestore(app), auth = getAuth(app), col = collection(db, 'panti');
+const ADMIN_UID = "UrwGR11yBNOSCpmxjuWeQlfevJ12";
+
+const KOTA = ["Banyumanik","Candisari","Gajahmungkur","Gayamsari","Genuk","Gunungpati","Mijen","Ngaliyan","Pedurungan","Semarang Barat","Semarang Selatan","Semarang Tengah","Semarang Timur","Semarang Utara","Tembalang","Tugu"];
+const KAB = ["Ambarawa","Bancak","Bandungan","Banyubiru","Bawen","Bergas","Bringin","Getasan","Jambu","Kaliwungu","Pabelan","Pringapus","Sumowono","Suruh","Susukan","Tengaran","Tuntang","Ungaran Barat","Ungaran Timur"];
+const ALL = [...KOTA.map(k => "Kota Semarang | " + k), ...KAB.map(k => "Kab. Semarang | " + k)];
+const label = v => v.split(" | ")[1] + (v.startsWith("Kota") ? ", Kota Semarang" : ", Kab. Semarang");
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let data = [], admin = false, pos = null, editId = null, loaded = false;
+
+function optGroups(withAll){
+  const o = c => c.map(v => `<option value="${esc(v)}">${esc(v.split(" | ")[1])}</option>`).join('');
+  return (withAll ? '<option value="">Semua daerah</option>' : '<option value="" disabled selected>Pilih daerah</option>')
+    + `<optgroup label="Kota Semarang">${o(ALL.slice(0,16))}</optgroup><optgroup label="Kabupaten Semarang">${o(ALL.slice(16))}</optgroup>`;
+}
+$('fkec').innerHTML = optGroups(true);
+$('f-kec').innerHTML = optGroups(false);
+
+let tt; const toast = m => { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2800); };
+const km = (a,b,c,d) => { const R=6371, r=Math.PI/180, x=(c-a)*r, y=(d-b)*r;
+  const h = Math.sin(x/2)**2 + Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2; return R*2*Math.atan2(Math.sqrt(h), Math.sqrt(1-h)); };
+const wa = t => { let n = String(t||'').replace(/\D/g,''); if (!n) return ''; if (n.startsWith('0')) n = '62' + n.slice(1); else if (n.startsWith('8')) n = '62' + n; return n; };
+
+function kartu(p){
+  const nav = (p.lat != null && p.lng != null)
+    ? `${p.lat},${p.lng}` : encodeURIComponent(p.nama + ' ' + p.alamat + ' Semarang');
+  const n = wa(p.telp);
+  const hub = n ? `<a class="btn ghost" target="_blank" rel="noopener" href="https://wa.me/${n}?text=${encodeURIComponent('Halo, saya driver, mau sedekah makanan ke ' + p.nama)}"><svg class="i"><use href="#i-phone"/></svg>Hubungi</a>`
+                : `<span class="btn ghost" style="opacity:.45">Belum ada nomor</span>`;
+  return `<div class="card"><div class="top"><div class="thumb"><svg class="i"><use href="#i-heart"/></svg></div>
+    <div><h3>${esc(p.nama)}</h3><div class="meta">${esc(p.alamat)}</div>
+    <span class="tag">${p.jarak != null ? p.jarak.toFixed(1) + ' km dari kamu' : esc(label(p.kec))}</span>
+    ${p.telp ? `<div class="meta">${esc(p.telp)}</div>` : ''}</div></div>
+    <div class="ra2"><a class="btn main" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${nav}"><svg class="i"><use href="#i-nav"/></svg>Navigasi</a>${hub}</div>
+    ${admin ? `<div class="adm"><button type="button" data-edit="${p.id}">Edit</button><button type="button" class="del" data-del="${p.id}">Hapus</button></div>` : ''}</div>`;
+}
+
+function render(){
+  const q = $('q').value.trim().toLowerCase(), fk = $('fkec').value;
+  let list = data.filter(p => (!fk || p.kec === fk) && (!q || (p.nama + ' ' + p.alamat).toLowerCase().includes(q)));
+  const out = $('out');
+  if (!loaded){ out.innerHTML = '<div class="note">Memuat daftar panti...</div>'; return; }
+  if (!data.length){ out.innerHTML = '<div class="note">Belum ada data panti. Admin bisa menambahkannya lewat tombol Tambah panti.</div>'; return; }
+  if (!list.length){ out.innerHTML = '<div class="note">Tidak ada panti yang cocok dengan pencarian atau daerah ini.</div>'; return; }
+  if (pos){
+    list = list.map(p => ({...p, jarak: (p.lat != null && p.lng != null) ? km(pos.lat, pos.lng, p.lat, p.lng) : null}))
+      .sort((a,b) => (a.jarak ?? 1e9) - (b.jarak ?? 1e9));
+    out.innerHTML = `<div class="sec"><h2>Terdekat dari kamu</h2><small>${list.length} panti</small></div><div class="list">${list.map(kartu).join('')}</div>`;
+    return;
+  }
+  const g = {}; list.forEach(p => (g[p.kec] ||= []).push(p));
+  out.innerHTML = ALL.filter(k => g[k]).map(k =>
+    `<div class="sec"><h2>${esc(k.split(" | ")[1])}</h2><small>${k.startsWith("Kota") ? 'Kota Semarang' : 'Kab. Semarang'} | ${g[k].length} panti</small></div>
+     <div class="list">${g[k].sort((a,b) => a.nama.localeCompare(b.nama)).map(kartu).join('')}</div>`).join('');
+}
+
+onSnapshot(col, snap => {
+  data = snap.docs.map(d => ({...d.data(), id: d.id})); loaded = true; render();
+}, e => { console.error(e); loaded = true; data = []; $('out').innerHTML = '<div class="note">Gagal memuat data. Cek internet dan Rules Firestore untuk koleksi panti.</div>'; });
+
+onAuthStateChanged(auth, u => { admin = !!u && u.uid === ADMIN_UID; $('adminbar').hidden = !admin; render(); });
+$('adminbtn').onclick = async () => {
+  if (admin){ if (confirm('Keluar dari mode admin?')) await signOut(auth); return; }
+  const em = prompt('Email admin:'); if (!em) return;
+  const pw = prompt('Kata sandi admin:'); if (!pw) return;
+  try { await signInWithEmailAndPassword(auth, em.trim(), pw); toast(auth.currentUser.uid === ADMIN_UID ? 'Halo Admin!' : 'Akun ini bukan admin.'); }
+  catch(e){ toast('Email atau kata sandi salah.'); }
+};
+
+$('q').oninput = render; $('fkec').onchange = render;
+$('near').onclick = () => {
+  const b = $('near');
+  if (pos){ pos = null; b.setAttribute('aria-pressed','false'); render(); return; }
+  if (!navigator.geolocation){ toast('Perangkat ini tidak mendukung lokasi.'); return; }
+  toast('Mencari posisi kamu...');
+  navigator.geolocation.getCurrentPosition(
+    p => { pos = {lat:p.coords.latitude, lng:p.coords.longitude}; b.setAttribute('aria-pressed','true'); render(); },
+    () => toast('Lokasi tidak bisa dibaca. Nyalakan GPS dan izinkan akses.'), {enableHighAccuracy:true, timeout:10000});
+};
+
+function buka(p){
+  editId = p ? p.id : null; $('judul').textContent = p ? 'Edit panti' : 'Tambah panti';
+  $('f-nama').value = p?.nama || ''; $('f-kec').value = p?.kec || ''; $('f-alamat').value = p?.alamat || '';
+  $('f-telp').value = p?.telp || ''; $('f-lat').value = p?.lat ?? ''; $('f-lng').value = p?.lng ?? '';
+  $('sheet').classList.add('on');
+}
+$('tambah').onclick = () => buka(null);
+$('batal').onclick = () => $('sheet').classList.remove('on');
+$('pakailoc').onclick = () => navigator.geolocation?.getCurrentPosition(
+  p => { $('f-lat').value = p.coords.latitude.toFixed(6); $('f-lng').value = p.coords.longitude.toFixed(6); },
+  () => toast('Lokasi tidak bisa dibaca.'), {enableHighAccuracy:true, timeout:10000});
+
+$('out').onclick = async e => {
+  const ed = e.target.closest('[data-edit]'), dl = e.target.closest('[data-del]');
+  if (ed) buka(data.find(p => p.id === ed.dataset.edit));
+  if (dl && confirm('Hapus panti ini?')){ try { await deleteDoc(doc(db,'panti',dl.dataset.del)); toast('Panti dihapus.'); } catch(x){ toast('Gagal menghapus. Cek Rules.'); } }
+};
+
+$('form').onsubmit = async e => {
+  e.preventDefault();
+  const num = v => { const n = parseFloat(String(v).replace(',','.')); return Number.isFinite(n) ? n : null; };
+  const d = { nama:$('f-nama').value.trim(), kec:$('f-kec').value, alamat:$('f-alamat').value.trim(),
+    telp:$('f-telp').value.trim(), lat:num($('f-lat').value), lng:num($('f-lng').value) };
+  if (!d.nama || !d.kec || !d.alamat){ toast('Nama, daerah, dan alamat wajib diisi.'); return; }
+  try {
+    if (editId) await updateDoc(doc(db,'panti',editId), d);
+    else await addDoc(col, {...d, createdAt: serverTimestamp()});
+    $('sheet').classList.remove('on'); toast('Tersimpan.');
+  } catch(x){ console.error(x); toast('Gagal menyimpan. Pastikan login admin dan Rules sudah benar.'); }
+};
+</script>
+</body>
+</html>
