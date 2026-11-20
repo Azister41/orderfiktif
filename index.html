@@ -361,6 +361,8 @@
     <div class="field">
       <label for="rep-alamat">Alamat atau titik antar fiktif</label>
       <input class="inp" id="rep-alamat" required placeholder="Jl. Banjarsari Gg. Melati (ujung dekat kebun kosong)" />
+      <button class="btn ghost sm" type="button" id="rep-locate" style="margin-top:10px"><svg class="i"><use href="#i-locate"/></svg><span id="rep-locate-txt">Pakai lokasiku sekarang</span></button>
+      <p class="page-sub" style="font-size:13px;margin-top:6px">Opsional. Pakai kalau kamu sedang berada di titik antar, supaya laporan langsung muncul di peta.</p>
     </div>
     <div class="field">
       <label for="rep-akun">Nama akun atau no. WA</label>
@@ -517,6 +519,7 @@ let homeY = 0;
 let currentScreen = 'home';
 let detailId = null;
 let delTimer = null;
+let repLL = null;
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -749,9 +752,12 @@ function submitReport(e){
     confirmedByMe: true,
     createdAt: Date.now()
   });
+  if (repLL){ reports[0].lat = repLL.lat; reports[0].lng = repLL.lng; }
   saveReports();
   cloud.set(reports[0]);
   form.reset();
+  repLL = null;
+  $('#rep-locate-txt').textContent = 'Pakai lokasiku sekarang';
   homeY = 0;
   history.back();
   setTimeout(() => toast('Laporan tersimpan di database Semarang.'), 250);
@@ -994,6 +1000,19 @@ $('#d-confirm').addEventListener('click', toggleConfirm);
 $('#peta-save').addEventListener('click', savePoint);
 $('#peta-cancel').addEventListener('click', clearDraft);
 $('#peta-locate').addEventListener('click', locateMe);
+$('#rep-locate').addEventListener('click', () => {
+  if (!navigator.geolocation){ toast('Perangkat ini tidak mendukung lokasi.'); return; }
+  const txt = $('#rep-locate-txt');
+  txt.textContent = 'Mengambil lokasi...';
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      repLL = { lat: Number(pos.coords.latitude.toFixed(6)), lng: Number(pos.coords.longitude.toFixed(6)) };
+      txt.textContent = 'Lokasi terpasang (' + repLL.lat.toFixed(4) + ', ' + repLL.lng.toFixed(4) + ')';
+    },
+    () => { repLL = null; txt.textContent = 'Pakai lokasiku sekarang'; toast('Lokasi tidak bisa diambil. Cek izin lokasi.'); },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+});
 $('#d-del').addEventListener('click', handleDelete);
 $('#d-copy').addEventListener('click', () => {
   const r = reports.find(x => x.id === detailId);
