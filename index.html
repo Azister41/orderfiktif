@@ -243,6 +243,7 @@
 </svg>
 
 <!-- ============ BERANDA ============ -->
+<button onclick="mintaPIN()" style="opacity:0.3; font-size:11px">Admin</button>
 <section class="screen" id="s-home">
   <div class="contours" data-contour="home" aria-hidden="true"></div>
   <a class="round gear" href="#/setelan" aria-label="Setelan"><img src="https://i.postimg.cc/x8DY46Tg/1795163526-picsay.png" alt="" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><svg class="i" hidden><use href="#i-gear"/></svg></a>
@@ -546,7 +547,7 @@ function saveReports(){
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(reports)); } catch (e) { console.error('Gagal menyimpan', e); }
 }
 // hook Firebase: diisi oleh <script type="module"> di bawah; kalau Firebase gagal dimuat, aplikasi tetap jalan lokal
-window.cloud = { set(){}, del(){}, confirm(){}, patch(){} };
+window.cloud = { set(){}, del(){}, confirm(){}, patch(){}, add: async () => ({ ok: true }), cekBatas: async () => ({ ok: true }), login: async () => false, logout: async () => {} };
 
 /* ---------- garis kontur ---------- */
 function contourSVG(w, h, cx, cy, rings, seed){
@@ -753,6 +754,9 @@ async function submitReport(e){
   if (btn.disabled) return;
   btn.disabled = true;
 
+  const cek = await cloud.cekBatas();
+  if (!cek.ok){ toast(cek.msg || 'Batas laporan hari ini sudah habis. Coba lagi besok.'); btn.disabled = false; return; }
+
   // titik peta: GPS kalau sudah dipasang, kalau tidak cari dari alamat, terakhir pakai pusat kecamatan
   let ll = repLL, approx = false;
   if (!ll){
@@ -765,7 +769,7 @@ async function submitReport(e){
   const now = new Date();
   const jam = String(now.getHours()).padStart(2, '0');
   const menit = String(now.getMinutes()).padStart(2, '0');
-  reports.unshift({
+  const rep = {
     id: 'rep-' + Date.now(),
     platform: repPlatform,
     kecamatan: $('#rep-kecamatan').value,
@@ -778,10 +782,14 @@ async function submitReport(e){
     confirmations: 1,
     confirmedByMe: true,
     createdAt: Date.now()
-  });
-  if (ll){ reports[0].lat = ll.lat; reports[0].lng = ll.lng; }
+  };
+  if (ll){ rep.lat = ll.lat; rep.lng = ll.lng; }
+  const hasil = await cloud.add(rep);
+  if (!hasil.ok){ toast(hasil.msg || 'Gagal mengirim laporan.'); btn.disabled = false; return; }
+  let cur = reports.find(x => x.id === rep.id);
+  if (!cur){ reports.unshift(rep); cur = rep; }
+  cur.confirmedByMe = true;
   saveReports();
-  cloud.set(reports[0]);
   form.reset();
   repLL = null;
   $('#rep-locate-txt').textContent = 'Pakai lokasiku sekarang';
@@ -824,6 +832,7 @@ function renderDetail(id){
 
   updateConfirmBtn(r);
   resetDelete();
+  $('#d-del').style.display = isAdmin() ? '' : 'none';
   return true;
 }
 
@@ -864,6 +873,7 @@ function resetDelete(){
   b.setAttribute('aria-label', 'Hapus laporan');
 }
 function handleDelete(){
+  if (!isAdmin()){ toast('Hanya admin yang bisa menghapus laporan.'); return; }
   const b = $('#d-del');
   if (!b.classList.contains('armed')){
     b.classList.add('armed');
@@ -892,7 +902,22 @@ function pinIcon(r){
     iconSize: [40, 40], iconAnchor: [20, 20], popupAnchor: [0, -20]
   });
 }
-
+function isAdmin(){ return window.__admin === true; }
+async function mintaPIN(){
+  if (isAdmin()){
+    if (confirm('Keluar dari mode admin?')) await cloud.logout();
+    return;
+  }
+  const em = prompt('Email admin:'); if (!em) return;
+  const pw = prompt('Kata sandi admin:'); if (!pw) return;
+  const ok = await cloud.login(em.trim(), pw);
+  alert(ok ? 'Halo Admin! Tombol hapus sudah muncul.' : 'Email atau kata sandi salah.');
+}
+// dipanggil modul Firebase tiap status login berubah
+function adminChanged(){
+  if (currentScreen === 'detail') renderDetail(detailId);
+  else if (currentScreen === 'peta' && map) refreshMarkers(false);
+}
 function refreshMarkers(fit){
   if (!map) return;
   markerLayer.clearLayers();
@@ -902,13 +927,21 @@ function refreshMarkers(fit){
     const box = document.createElement('div');
     box.className = 'pop';
     box.innerHTML = '<b>' + esc(r.alamat) + '</b>' + esc(r.kecamatan) + ', ' + esc(r.nominal) +
-      '<div class="pa"><a href="#/r/' + encodeURIComponent(r.id) + '">Buka detail</a><button type="button">Hapus titik</button></div>';
-    box.querySelector('button').addEventListener('click', () => {
-      delete r.lat; delete r.lng;
-      cloud.patch(r.id, { lat: null, lng: null });
-      saveReports(); map.closePopup(); refreshMarkers(false);
-      toast('Titik dihapus dari peta.');
-    });
+     '"><a href="#/r/' + r.id + '">Buka detail</a>' + (isAdmin() ? '<button type="button">Hapus titik</button>' : '') + '</div>';
+    const btnHapus = box.querySelector('button');
+if(btnHapus){
+  btnHapus.addEventListener('click', () => {
+    if(!isAdmin()){
+      alert('Hanya admin yang bisa hapus!');
+      return;
+    }
+    if(!confirm('Yakin hapus titik ini?')) return;
+    delete r.lat; delete r.lng;
+    cloud.patch(r.id, { lat: null, lng: null });
+    saveReports(); map.closePopup(); refreshMarkers(false);
+    toast('Titik dihapus dari peta.');
+  });
+}
     m.bindPopup(box);
     m.addTo(markerLayer);
     pts.push([r.lat, r.lng]);
@@ -1071,8 +1104,10 @@ renderPills('lapor');
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, increment, writeBatch }
+import { getFirestore, collection, doc, getDoc, updateDoc, deleteDoc, onSnapshot, increment, writeBatch }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getAuth, signInAnonymously, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAJwwVl16QykhyfJ42LmxU6WClF9Vs5zzw",
@@ -1085,7 +1120,23 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 const col = collection(db, 'reports');
+const ADMIN_UID = "GANTI_DENGAN_UID_ADMIN"; // Firebase Console > Authentication > Users > kolom User UID
+const MAX_PER_HARI = 3;
+
+// semua pengunjung otomatis login anonim (tanpa form), admin login email+sandi
+let authDone; const ready = new Promise(res => { authDone = res; });
+onAuthStateChanged(auth, (u) => {
+  if (!u){ signInAnonymously(auth).catch((e) => { console.error(e); authDone(null); }); return; }
+  window.__admin = (u.uid === ADMIN_UID);
+  authDone(u);
+  if (typeof adminChanged === 'function') adminChanged();
+});
+
+// hari dihitung zona WIB (UTC+7), harus sama dengan rules
+const hariWIB = () => Math.floor((Date.now() + 25200000) / 86400000);
+const limRef = (uid) => doc(db, 'limits', uid + '_' + hariWIB());
 const SEEDED_KEY = 'radar_fiktif_smg_seeded_v1';
 const fail = (e) => { console.error('Firebase:', e); toast('Gagal sinkron ke server. Cek koneksi.'); };
 
@@ -1098,10 +1149,48 @@ const clean = (r) => {
 };
 
 window.cloud = {
-  set: (r) => setDoc(doc(db, 'reports', r.id), clean(r)).catch(fail),
-  del: (id) => deleteDoc(doc(db, 'reports', id)).catch(fail),
-  confirm: (id, n) => updateDoc(doc(db, 'reports', id), { confirmations: increment(n) }).catch(fail),
-  patch: (id, data) => updateDoc(doc(db, 'reports', id), data).catch(fail)
+  async cekBatas(){
+    const u = await ready;
+    if (!u) return { ok: false, msg: 'Login anonim belum aktif di Firebase.' };
+    if (window.__admin) return { ok: true };
+    try {
+      const sn = await getDoc(limRef(u.uid));
+      const n = sn.exists() ? sn.data().count : 0;
+      if (n >= MAX_PER_HARI) return { ok: false, msg: 'Batas ' + MAX_PER_HARI + ' laporan per hari sudah habis. Coba lagi besok.' };
+    } catch (e) { console.error(e); } // kalau gagal baca, biar rules server yang memutuskan
+    return { ok: true };
+  },
+  async add(r){
+    const u = await ready;
+    if (!u) return { ok: false, msg: 'Login anonim belum aktif di Firebase.' };
+    const o = clean(r); o.uid = u.uid;
+    const batch = writeBatch(db);
+    if (!window.__admin){
+      let n = 0;
+      try { const sn = await getDoc(limRef(u.uid)); n = sn.exists() ? sn.data().count : 0; } catch (e) {}
+      if (n >= MAX_PER_HARI) return { ok: false, msg: 'Batas ' + MAX_PER_HARI + ' laporan per hari sudah habis. Coba lagi besok.' };
+      batch.set(limRef(u.uid), { uid: u.uid, hari: hariWIB(), count: n + 1 });
+    }
+    batch.set(doc(db, 'reports', r.id), o);
+    try {
+      // kalau offline, commit menunggu; setelah 15 dtk anggap antre dan lanjut
+      await Promise.race([batch.commit(), new Promise(res => setTimeout(res, 15000))]);
+      return { ok: true };
+    } catch (e) {
+      console.error(e);
+      return { ok: false, msg: e.code === 'permission-denied'
+        ? 'Ditolak server. Batas harian mungkin habis, atau jam HP-mu tidak tepat.'
+        : 'Gagal mengirim laporan. Cek koneksi.' };
+    }
+  },
+  async del(id){ await ready; return deleteDoc(doc(db, 'reports', id)).catch(fail); },
+  async confirm(id, n){ await ready; return updateDoc(doc(db, 'reports', id), { confirmations: increment(n) }).catch(fail); },
+  async patch(id, data){ await ready; return updateDoc(doc(db, 'reports', id), data).catch(fail); },
+  async login(email, pw){
+    try { await signInWithEmailAndPassword(auth, email, pw); return true; }
+    catch (e) { console.error(e); return false; }
+  },
+  async logout(){ await signOut(auth); }
 };
 
 async function seed(){
@@ -1120,7 +1209,7 @@ async function seed(){
 onSnapshot(col, (snap) => {
   let seeded = false;
   try { seeded = !!localStorage.getItem(SEEDED_KEY); } catch (e) {}
-  if (snap.empty && !seeded) { seed().catch(fail); return; }
+  if (snap.empty && !seeded) { if (window.__admin) seed().catch(fail); return; }
 
   const mine = new Map(reports.map(r => [r.id, r.confirmedByMe]));
   reports = snap.docs.map(d => ({ ...d.data(), id: d.id, confirmedByMe: !!mine.get(d.id) }));
