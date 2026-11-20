@@ -542,6 +542,8 @@ function loadReports(){
 function saveReports(){
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(reports)); } catch (e) { console.error('Gagal menyimpan', e); }
 }
+// hook Firebase: diisi oleh <script type="module"> di bawah; kalau Firebase gagal dimuat, aplikasi tetap jalan lokal
+window.cloud = { set(){}, del(){}, confirm(){}, patch(){} };
 
 /* ---------- garis kontur ---------- */
 function contourSVG(w, h, cx, cy, rings, seed){
@@ -744,9 +746,11 @@ function submitReport(e){
     kronologi: $('#rep-kronologi').value.trim(),
     timestamp: 'Baru saja (' + jam + ':' + menit + ' WIB)',
     confirmations: 1,
-    confirmedByMe: true
+    confirmedByMe: true,
+    createdAt: Date.now()
   });
   saveReports();
+  cloud.set(reports[0]);
   form.reset();
   homeY = 0;
   history.back();
@@ -805,10 +809,12 @@ function toggleConfirm(){
   if (r.confirmedByMe){
     r.confirmations = Math.max(1, (r.confirmations || 1) - 1);
     r.confirmedByMe = false;
+    cloud.confirm(r.id, -1);
     toast('Konfirmasi dibatalkan.');
   } else {
     r.confirmations = (r.confirmations || 1) + 1;
     r.confirmedByMe = true;
+    cloud.confirm(r.id, 1);
     toast('Terkonfirmasi. Jumlah korban di titik ini bertambah.');
   }
   saveReports();
@@ -830,6 +836,7 @@ function handleDelete(){
     delTimer = setTimeout(resetDelete, 3000);
     return;
   }
+  cloud.del(detailId);
   reports = reports.filter(r => r.id !== detailId);
   saveReports();
   resetDelete();
@@ -862,6 +869,7 @@ function refreshMarkers(fit){
       '<div class="pa"><a href="#/r/' + encodeURIComponent(r.id) + '">Buka detail</a><button type="button">Hapus titik</button></div>';
     box.querySelector('button').addEventListener('click', () => {
       delete r.lat; delete r.lng;
+      cloud.patch(r.id, { lat: null, lng: null });
       saveReports(); map.closePopup(); refreshMarkers(false);
       toast('Titik dihapus dari peta.');
     });
@@ -912,6 +920,7 @@ function savePoint(){
   if (!r || !draftLL){ toast('Pilih laporan dulu.'); return; }
   r.lat = Number(draftLL.lat.toFixed(6));
   r.lng = Number(draftLL.lng.toFixed(6));
+  cloud.patch(r.id, { lat: r.lat, lng: r.lng });
   saveReports();
   clearDraft();
   refreshMarkers(false);
@@ -1010,6 +1019,70 @@ renderPills('lapor');
     location.hash = initial.slice(1);
   } else { route(); }
 })();
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, increment, writeBatch }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAJwwVl16QykhyfJ42LmxU6WClF9Vs5zzw",
+  authDomain: "orderfiktif.firebaseapp.com",
+  projectId: "orderfiktif",
+  storageBucket: "orderfiktif.firebasestorage.app",
+  messagingSenderId: "302212019912",
+  appId: "1:302212019912:web:8e104f4d4a3f7b017b57fd"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const col = collection(db, 'reports');
+const SEEDED_KEY = 'radar_fiktif_smg_seeded_v1';
+const fail = (e) => { console.error('Firebase:', e); toast('Gagal sinkron ke server. Cek koneksi.'); };
+
+// confirmedByMe cuma milik perangkat ini, jadi tidak dikirim ke server
+const clean = (r) => {
+  const o = { ...r };
+  delete o.confirmedByMe;
+  Object.keys(o).forEach(k => o[k] === undefined && delete o[k]);
+  return o;
+};
+
+window.cloud = {
+  set: (r) => setDoc(doc(db, 'reports', r.id), clean(r)).catch(fail),
+  del: (id) => deleteDoc(doc(db, 'reports', id)).catch(fail),
+  confirm: (id, n) => updateDoc(doc(db, 'reports', id), { confirmations: increment(n) }).catch(fail),
+  patch: (id, data) => updateDoc(doc(db, 'reports', id), data).catch(fail)
+};
+
+async function seed(){
+  const batch = writeBatch(db);
+  DEFAULT_REPORTS.forEach((r, i) => {
+    const o = clean(r);
+    if (SEED_COORDS[r.id]) { o.lat = SEED_COORDS[r.id][0]; o.lng = SEED_COORDS[r.id][1]; }
+    o.createdAt = 1700000000000 - i;
+    batch.set(doc(db, 'reports', r.id), o);
+  });
+  await batch.commit();
+  try { localStorage.setItem(SEEDED_KEY, '1'); } catch (e) {}
+}
+
+// data live dari server: semua perangkat melihat laporan yang sama
+onSnapshot(col, (snap) => {
+  let seeded = false;
+  try { seeded = !!localStorage.getItem(SEEDED_KEY); } catch (e) {}
+  if (snap.empty && !seeded) { seed().catch(fail); return; }
+
+  const mine = new Map(reports.map(r => [r.id, r.confirmedByMe]));
+  reports = snap.docs.map(d => ({ ...d.data(), id: d.id, confirmedByMe: !!mine.get(d.id) }));
+  reports.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  saveReports();
+
+  if (currentScreen === 'home') renderHome();
+  else if (currentScreen === 'detail') { if (!renderDetail(detailId)) location.replace('#/'); }
+  else if (currentScreen === 'peta' && map) refreshMarkers(false);
+  else if (currentScreen === 'setelan') updateSetelan();
+}, fail);
 </script>
 </body>
 </html>
