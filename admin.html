@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin - ACC Driver</title>
+<style>
+  body{font-family:sans-serif; padding:16px; background:#f2f2f2}
+  .card{background:#fff; padding:14px; margin-bottom:12px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.1)}
+  button{padding:10px 14px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-right:8px}
+  .acc{background:#16a34a; color:#fff}
+  .tolak{background:#dc2626; color:#fff}
+</style>
+</head>
+<body>
+<h2>Admin - Pengajuan Driver</h2>
+<p>Sing nunggu ACC:</p>
+<div id="list">Loading...</div>
+
+<!-- FIREBASE - COPAS TEKO PETA.HTML MU -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+// === COPAS firebaseConfig TEKO PETA.HTML MU NENG KENE ===
+const firebaseConfig = {
+  apiKey: "AIzaSyAJwwVl16QykhyfJ42LmxU6WClF9Vs5zzw",
+  authDomain: "orderfiktif.firebaseapp.com",
+  projectId: "orderfiktif",
+  storageBucket: "orderfiktif.firebasestorage.app",
+  messagingSenderId: "302212019912",
+  appId: "1:302212019912:web:8e104f4d4a3f7b017b57fd"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Tampilke sing pending
+db.collection('driver_requests').where('status','==','pending').onSnapshot(snap=>{
+  var el = document.getElementById('list');
+  if(snap.empty){ el.innerHTML = '<p>Gak ono pengajuan, resik bolo!</p>'; return; }
+  var html = '';
+  snap.forEach(doc=>{
+    var d = doc.data();
+    html += '<div class="card">'
+      + '<b>'+d.idDriver+'</b> - '+d.nama+'<br>'
+      + 'WA: '+d.wa+'<br>'
+      + 'Wilayah: '+d.wilayah+'<br><br>'
+      + '<button class="acc" onclick="accDriver(\''+doc.id+'\')">✅ ACC</button>'
+      + '<button class="tolak" onclick="tolakDriver(\''+doc.id+'\')">❌ TOLAK</button>'
+      + '</div>';
+  });
+  el.innerHTML = html;
+});
+
+// Nek pencet ACC
+async function accDriver(id){
+  var data = (await db.collection('driver_requests').doc(id).get()).data();
+  await db.collection('drivers').doc(id).set({...data, status:'approved'});
+  await db.collection('driver_requests').doc(id).delete();
+  alert('Driver '+id+' wes di-ACC!');
+}
+
+// Nek pencet TOLAK
+async function tolakDriver(id){
+  if(!confirm('Yakin tolak '+id+'?')) return;
+  await db.collection('driver_requests').doc(id).delete();
+  alert('Driver '+id+' ditolak!');
+}
+</script>
+</body>
+</html>
