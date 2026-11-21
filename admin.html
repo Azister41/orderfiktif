@@ -10,18 +10,36 @@
   button{padding:10px 14px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-right:8px}
   .acc{background:#16a34a; color:#fff}
   .tolak{background:#dc2626; color:#fff}
+  input{width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #ccc; box-sizing:border-box}
+  #halamanAdmin{display:none}
+  #halamanLogin{max-width:400px; margin:60px auto; background:#fff; padding:20px; border-radius:14px; text-align:center}
 </style>
 </head>
 <body>
-<h2>Admin - Pengajuan Driver</h2>
-<p>Sing nunggu ACC:</p>
-<div id="list">Loading...</div>
 
-<!-- FIREBASE - COPAS TEKO PETA.HTML MU -->
+<!-- HALAMAN 1: KUNCI PASSWORD -->
+<div id="halamanLogin">
+  <h2>🔐 Login Admin</h2>
+  <p>Mek admin sing iso mlebu!</p>
+  <input type="password" id="passAdmin" placeholder="Password Admin">
+  <button class="acc" style="width:100%" onclick="cekPassword()">MASUK</button>
+  <p id="pesanSalah" style="color:red; display:none">Password salah bolo!</p>
+</div>
+
+<!-- HALAMAN 2: LIST DRIVER (didhelikne disik) -->
+<div id="halamanAdmin">
+  <h2>Admin - Pengajuan Driver</h2>
+  <button onclick="logoutAdmin()">Logout</button>
+  <p>Sing nunggu ACC:</p>
+  <div id="list">Loading...</div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-// === COPAS firebaseConfig TEKO PETA.HTML MU NENG KENE ===
+// === GANTI PASSWORD NENG KENE, SAK KAREP ABANG ===
+const PASSWORD_ADMIN = '421541';
+
 const firebaseConfig = {
   apiKey: "AIzaSyAJwwVl16QykhyfJ42LmxU6WClF9Vs5zzw",
   authDomain: "orderfiktif.firebaseapp.com",
@@ -33,25 +51,50 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// Tampilke sing pending
-db.collection('driver_requests').where('status','==','pending').onSnapshot(snap=>{
-  var el = document.getElementById('list');
-  if(snap.empty){ el.innerHTML = '<p>Gak ono pengajuan, resik bolo!</p>'; return; }
-  var html = '';
-  snap.forEach(doc=>{
-    var d = doc.data();
-    html += '<div class="card">'
-      + '<b>'+d.idDriver+'</b> - '+d.nama+'<br>'
-      + 'WA: '+d.wa+'<br>'
-      + 'Wilayah: '+d.wilayah+'<br><br>'
-      + '<button class="acc" onclick="accDriver(\''+doc.id+'\')">✅ ACC</button>'
-      + '<button class="tolak" onclick="tolakDriver(\''+doc.id+'\')">❌ TOLAK</button>'
-      + '</div>';
-  });
-  el.innerHTML = html;
-});
+// CEK PASSWORD
+function cekPassword(){
+  var p = document.getElementById('passAdmin').value;
+  if(p === PASSWORD_ADMIN){
+    sessionStorage.setItem('isAdmin', '1');
+    tampilkeAdmin();
+  } else {
+    document.getElementById('pesanSalah').style.display = 'block';
+  }
+}
 
-// Nek pencet ACC
+function logoutAdmin(){
+  sessionStorage.removeItem('isAdmin');
+  location.reload();
+}
+
+// NEK WES TAU LOGIN, LANGSUNG MLEBU (gak perlu ketik maneh)
+if(sessionStorage.getItem('isAdmin') === '1'){
+  tampilkeAdmin();
+}
+
+function tampilkeAdmin(){
+  document.getElementById('halamanLogin').style.display = 'none';
+  document.getElementById('halamanAdmin').style.display = 'block';
+
+  // Tampilke sing pending
+  db.collection('driver_requests').where('status','==','pending').onSnapshot(snap=>{
+    var el = document.getElementById('list');
+    if(snap.empty){ el.innerHTML = '<p>Gak ono pengajuan, resik bolo!</p>'; return; }
+    var html = '';
+    snap.forEach(doc=>{
+      var d = doc.data();
+      html += '<div class="card">'
+        + '<b>'+d.idDriver+'</b> - '+d.nama+'<br>'
+        + 'WA: '+d.wa+'<br>'
+        + 'Wilayah: '+d.wilayah+'<br><br>'
+        + '<button class="acc" onclick="accDriver(\''+doc.id+'\')">✅ ACC</button>'
+        + '<button class="tolak" onclick="tolakDriver(\''+doc.id+'\')">❌ TOLAK</button>'
+        + '</div>';
+    });
+    el.innerHTML = html;
+  });
+}
+
 async function accDriver(id){
   var data = (await db.collection('driver_requests').doc(id).get()).data();
   await db.collection('drivers').doc(id).set({...data, status:'approved'});
@@ -59,7 +102,6 @@ async function accDriver(id){
   alert('Driver '+id+' wes di-ACC!');
 }
 
-// Nek pencet TOLAK
 async function tolakDriver(id){
   if(!confirm('Yakin tolak '+id+'?')) return;
   await db.collection('driver_requests').doc(id).delete();
