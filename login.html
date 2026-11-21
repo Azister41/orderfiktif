@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pilih Wilayah Jateng - Radar Order Fiktif</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background-color: #E4ECE9;
+      color: #1E2B27;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 12px;
+      padding: 14px 0 24px 0;
+      overflow-x: hidden;
+    }
+
+    .top-header {
+      padding: 0 20px;
+    }
+
+    .badge-jateng {
+      display: inline-block;
+      background-color: #D2E0DB;
+      color: #274E43;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 6px;
+      letter-spacing: 0.03em;
+    }
+
+    .top-header h1 {
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1.18;
+      color: #1A2622;
+      margin-bottom: 4px;
+    }
+
+    .top-header p {
+      font-size: 13px;
+      color: #5C6D68;
+      line-height: 1.38;
+    }
+
+    .search-box {
+      padding: 0 20px;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 42px;
+      background-color: #F7F5F2;
+      border: 1.5px solid #D8E2DE;
+      border-radius: 999px;
+      padding: 0 16px;
+      font-size: 13px;
+      color: #1E2B27;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: #274E43;
+      background-color: #FFFFFF;
+    }
+
+    .slider-wrapper {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding: 2px 20px 2px 20px;
+      scrollbar-width: none;
+    }
+
+    .slider-wrapper::-webkit-scrollbar {
+      display: none;
+    }
+
+    .region-card {
+      flex: 0 0 148px;
+      scroll-snap-align: start;
+      background-color: #F7F5F2;
+      border: 1.5px solid #E3E8E5;
+      border-radius: 18px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      box-shadow: 0 3px 10px rgba(30, 43, 39, 0.04);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 90px;
+    }
+
+    .region-card.active {
+      background-color: #274E43;
+      border-color: #274E43;
+      color: #FFFFFF;
+      box-shadow: 0 6px 14px rgba(39, 78, 67, 0.22);
+    }
+
+    .region-type {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      opacity: 0.68;
+      margin-bottom: 2px;
+    }
+
+    .region-name {
+      font-size: 14.5px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .region-meta {
+      font-size: 11px;
+      font-weight: 600;
+      opacity: 0.85;
+    }
+
+    .login-section {
+      padding: 0 20px;
+    }
+
+    .login-card {
+      background-color: #F7F5F2;
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: 0 6px 20px rgba(30, 43, 39, 0.05);
+    }
+
+    .selected-banner {
+      background-color: #E5EDE9;
+      color: #274E43;
+      padding: 9px 14px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .selected-tag {
+      font-size: 11px;
+      font-weight: 700;
+      background-color: #D3E1DB;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #2C3B36;
+      margin-bottom: 5px;
+    }
+
+    .input-pill {
+      width: 100%;
+      height: 44px;
+      background-color: #FFFFFF;
+      border: 1.5px solid #E2E7E4;
+      border-radius: 999px;
+      padding: 0 16px;
+      font-size: 13.5px;
+      color: #1E2B27;
+      outline: none;
+    }
+
+    .input-pill:focus {
+      border-color: #274E43;
+    }
+
+    .password-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .password-wrap .input-pill {
+      padding-right: 54px;
+    }
+
+    .toggle-pw {
+      position: absolute;
+      right: 14px;
+      background: none;
+      border: none;
+      color: #274E43;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      width: 100%;
+      height: 46px;
+      background-color: #274E43;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 6px;
+      box-shadow: 0 5px 12px rgba(39, 78, 67, 0.18);
+    }
+
+    .btn-guest {
+      width: 100%;
+      background: none;
+      border: none;
+      color: #4A5B55;
+      font-size: 12.5px;
+      font-weight: 600;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #E8ECE9;
+      cursor: pointer;
+    }
+
+    .btn-guest strong {
+      color: #274E43;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-header">
+    <span class="badge-jateng">JAWA TENGAH • 35 WILAYAH</span>
+    <h1>Pilih Area Operasional</h1>
+    <p>Geser atau cari kota/kabupatenmu agar radar hanya memuat titik rawan di wilayahmu.</p>
+  </div>
+
+  <div class="search-box">
+    <input type="text" id="searchRegion" class="search-input" placeholder="Cari kota atau kabupaten (misal: Semarang, Solo)..." oninput="filterRegions()" />
+  </div>
+
+  <div class="slider-wrapper" id="regionSlider"></div>
+
+  <div class="login-section">
+    <div class="login-card">
+      <div class="selected-banner">
+        <span>Area: <strong id="selectedLabel">Kota Semarang</strong></span>
+        <span class="selected-tag">Jateng</span>
+      </div>
+
+      <form onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="wa">No. WhatsApp Driver</label>
+          <input type="text" id="wa" class="input-pill" placeholder="0812-xxxx-xxxx" required />
+        </div>
+
+        <div class="form-group">
+          <label for="pin">PIN / Kata Sandi</label>
+          <div class="password-wrap">
+            <input type="password" id="pin" class="input-pill" placeholder="Masukkan kata sandi" required />
+            <button type="button" class="toggle-pw" onclick="togglePin()">Lihat</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary" id="submitBtn">Masuk ke Radar Kota Semarang</button>
+      </form>
+
+      <button type="button" class="btn-guest" onclick="openGuest()">
+        Atau <strong>lihat radar tanpa login →</strong>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const jatengRegions = [
+      { id: 'kota-semarang', type: 'Kota', name: 'Semarang', file: 'kota-semarang.html' },
+      { id: 'kab-semarang', type: 'Kabupaten', name: 'Semarang', file: 'kab-semarang.html' },
+      { id: 'kota-surakarta', type: 'Kota', name: 'Surakarta (Solo)', file: 'kota-surakarta.html' },
+      { id: 'kota-salatiga', type: 'Kota', name: 'Salatiga', file: 'kota-salatiga.html' },
+      { id: 'kota-magelang', type: 'Kota', name: 'Magelang', file: 'kota-magelang.html' },
+      { id: 'kota-pekalongan', type: 'Kota', name: 'Pekalongan', file: 'kota-pekalongan.html' },
+      { id: 'kota-tegal', type: 'Kota', name: 'Tegal', file: 'kota-tegal.html' },
+      { id: 'kab-kendal', type: 'Kabupaten', name: 'Kendal', file: 'kab-kendal.html' },
+      { id: 'kab-demak', type: 'Kabupaten', name: 'Demak', file: 'kab-demak.html' },
+      { id: 'kab-grobogan', type: 'Kabupaten', name: 'Grobogan', file: 'kab-grobogan.html' },
+      { id: 'kab-banyumas', type: 'Kabupaten', name: 'Banyumas', file: 'kab-banyumas.html' },
+      { id: 'kab-cilacap', type: 'Kabupaten', name: 'Cilacap', file: 'kab-cilacap.html' },
+      { id: 'kab-purbalingga', type: 'Kabupaten', name: 'Purbalingga', file: 'kab-purbalingga.html' },
+      { id: 'kab-banjarnegara', type: 'Kabupaten', name: 'Banjarnegara', file: 'kab-banjarnegara.html' },
+      { id: 'kab-kebumen', type: 'Kabupaten', name: 'Kebumen', file: 'kab-kebumen.html' },
+      { id: 'kab-purworejo', type: 'Kabupaten', name: 'Purworejo', file: 'kab-purworejo.html' },
+      { id: 'kab-wonosobo', type: 'Kabupaten', name: 'Wonosobo', file: 'kab-wonosobo.html' },
+      { id: 'kab-magelang', type: 'Kabupaten', name: 'Magelang', file: 'kab-magelang.html' },
+      { id: 'kab-temanggung', type: 'Kabupaten', name: 'Temanggung', file: 'kab-temanggung.html' },
+      { id: 'kab-boyolali', type: 'Kabupaten', name: 'Boyolali', file: 'kab-boyolali.html' },
+      { id: 'kab-klaten', type: 'Kabupaten', name: 'Klaten', file: 'kab-klaten.html' },
+      { id: 'kab-sukoharjo', type: 'Kabupaten', name: 'Sukoharjo', file: 'kab-sukoharjo.html' },
+      { id: 'kab-wonogiri', type: 'Kabupaten', name: 'Wonogiri', file: 'kab-wonogiri.html' },
+      { id: 'kab-karanganyar', type: 'Kabupaten', name: 'Karanganyar', file: 'kab-karanganyar.html' },
+      { id: 'kab-sragen', type: 'Kabupaten', name: 'Sragen', file: 'kab-sragen.html' },
+      { id: 'kab-kudus', type: 'Kabupaten', name: 'Kudus', file: 'kab-kudus.html' },
+      { id: 'kab-jepara', type: 'Kabupaten', name: 'Jepara', file: 'kab-jepara.html' },
+      { id: 'kab-pati', type: 'Kabupaten', name: 'Pati', file: 'kab-pati.html' },
+      { id: 'kab-rembang', type: 'Kabupaten', name: 'Rembang', file: 'kab-rembang.html' },
+      { id: 'kab-blora', type: 'Kabupaten', name: 'Blora', file: 'kab-blora.html' },
+      { id: 'kab-batang', type: 'Kabupaten', name: 'Batang', file: 'kab-batang.html' },
+      { id: 'kab-pekalongan', type: 'Kabupaten', name: 'Pekalongan', file: 'kab-pekalongan.html' },
+      { id: 'kab-pemalang', type: 'Kabupaten', name: 'Pemalang', file: 'kab-pemalang.html' },
+      { id: 'kab-tegal', type: 'Kabupaten', name: 'Tegal', file: 'kab-tegal.html' },
+      { id: 'kab-brebes', type: 'Kabupaten', name: 'Brebes', file: 'kab-brebes.html' }
+    ];
+
+    let selectedRegion = jatengRegions[0];
+
+    function formatFullName(reg) {
+      return `${reg.type === 'Kota' ? 'Kota' : 'Kab.'} ${reg.name}`;
+    }
+
+    function updateLabels() {
+      const fullTitle = formatFullName(selectedRegion);
+      document.getElementById('selectedLabel').textContent = fullTitle;
+      document.getElementById('submitBtn').textContent = `Masuk ke Radar ${fullTitle}`;
+    }
+
+    function renderSlider(list) {
+      const slider = document.getElementById('regionSlider');
+      slider.innerHTML = '';
+      list.forEach(reg => {
+        const isActive = reg.id === selectedRegion.id;
+        const card = document.createElement('div');
+        card.className = `region-card ${isActive ? 'active' : ''}`;
+        card.onclick = () => selectRegion(reg);
+        card.innerHTML = `
+          <div>
+            <div class="region-type">${reg.type}</div>
+            <div class="region-name">${reg.name}</div>
+          </div>
+          <div class="region-meta">${isActive ? 'Terpilih' : 'Pilih area →'}</div>
+        `;
+        slider.appendChild(card);
+      });
+    }
+
+    function selectRegion(reg) {
+      selectedRegion = reg;
+      updateLabels();
+      filterRegions();
+    }
+
+    function filterRegions() {
+      const q = document.getElementById('searchRegion').value.toLowerCase();
+      const filtered = jatengRegions.filter(r =>
+        `${r.type} ${r.name}`.toLowerCase().includes(q)
+      );
+      renderSlider(filtered);
+    }
+
+    function togglePin() {
+      const pin = document.getElementById('pin');
+      const btn = document.querySelector('.toggle-pw');
+      if (pin.type === 'password') {
+        pin.type = 'text';
+        btn.textContent = 'Tutup';
+      } else {
+        pin.type = 'password';
+        btn.textContent = 'Lihat';
+      }
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      localStorage.setItem('radar_wilayah', JSON.stringify(selectedRegion));
+      window.location.href = selectedRegion.file;
+    }
+
+    function openGuest() {
+      localStorage.setItem('radar_wilayah', JSON.stringify(selectedRegion));
+      window.location.href = selectedRegion.file;
+    }
+
+    updateLabels();
+    renderSlider(jatengRegions);
+  </script>
+</body>
+</html>
