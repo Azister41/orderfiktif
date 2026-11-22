@@ -408,6 +408,11 @@ window.getPusatKota = function(){ return [window.REGION.center[0], window.REGION
     <span><strong>Peta titik fiktif</strong><small id="peta-count">Tandai lokasi titik di peta</small></span>
     <svg class="i go"><use href="#i-chev"/></svg>
   </a>
+  <a class="row" id="row-admin" href="admin.html" style="margin-top:12px;display:none">
+    <span class="bd"><svg class="i"><use href="#i-check"/></svg></span>
+    <span><strong>Panel admin</strong><small>ACC atau tolak pengajuan driver</small></span>
+    <svg class="i go"><use href="#i-chev"/></svg>
+  </a>
   <a class="row" href="index.html" style="margin-top:12px">
     <span class="bd"><svg class="i"><use href="#i-map"/></svg></span>
     <span><strong>Ganti wilayah</strong><small id="wil-now">Pilih kota / kabupaten lain</small></span>
@@ -943,6 +948,8 @@ async function mintaPIN(){
 }
 // dipanggil modul Firebase tiap status login berubah
 function adminChanged(){
+  const ra = document.getElementById('row-admin');
+  if (ra) ra.style.display = isAdmin() ? '' : 'none';
   if (currentScreen === 'detail') renderDetail(detailId);
   else if (currentScreen === 'peta' && map) refreshMarkers(false);
 }
