@@ -3,9 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#F97316">
-<link rel="apple-touch-icon" href="./icons/icon-192.png">
   <title>Pilih Wilayah - Radar Order Fiktif</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -325,6 +322,17 @@
       cursor: not-allowed;
     }
 
+    .auto-box, .saved-note {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      margin-bottom: 14px; padding: 11px 14px; border-radius: 14px;
+      background: #E6F1EC; color: #0F3D2E; font-size: 13.5px; line-height: 1.35;
+    }
+    .auto-box[hidden], .saved-note[hidden] { display: none; }
+    .auto-box button, .saved-note button {
+      flex: none; border: none; background: none; color: #0F3D2E;
+      font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; padding: 4px;
+    }
+
     .btn-guest {
       display: block;
       text-align: center;
@@ -353,6 +361,15 @@
       <div class="area-badge">
         <span>Area: <b id="areaLabel">Kota Semarang</b></span>
         <span class="pill" id="provPill">Jateng</span>
+      </div>
+
+      <div class="auto-box" id="autoBox" hidden>
+        <span id="autoTxt">Masuk otomatis...</span>
+        <button type="button" onclick="batalAuto()">Batal</button>
+      </div>
+      <div class="saved-note" id="savedNote" hidden>
+        <span>Tersimpan di perangkat ini: <b id="savedId"></b></span>
+        <button type="button" onclick="keluarAkun()">Keluar</button>
       </div>
 
       <div class="tab-row">
@@ -573,13 +590,57 @@
     saveSelectedRegion();
     updateLabels();
     renderSlider(jatengRegions);
+
+    // ---------- ingat login: tidak perlu ketik ID driver lagi setelah app/web ditutup ----------
+    let batalFlag = false;
+    function tampilkanTersimpan(id) {
+      document.getElementById('autoBox').hidden = true;
+      document.getElementById('savedId').textContent = id;
+      document.getElementById('savedNote').hidden = false;
+    }
+    function batalAuto() {
+      batalFlag = true;
+      const id = localStorage.getItem('radar_driver_id');
+      if (id) tampilkanTersimpan(id); else document.getElementById('autoBox').hidden = true;
+    }
+    function keluarAkun() {
+      localStorage.removeItem('radar_driver_id');
+      document.getElementById('savedNote').hidden = true;
+      document.getElementById('idDriver').value = '';
+    }
+    (async function ingatLogin() {
+      const id = localStorage.getItem('radar_driver_id');
+      if (!id) return;
+      document.getElementById('idDriver').value = id;
+      // dari "Ganti wilayah" (?ganti=1) jangan langsung masuk, biar bisa pilih wilayah lain
+      if (new URLSearchParams(location.search).has('ganti')) { tampilkanTersimpan(id); return; }
+      document.getElementById('autoTxt').textContent = 'Masuk otomatis sebagai ' + id + '...';
+      document.getElementById('autoBox').hidden = false;
+      try {
+        const user = await Promise.race([authReady, new Promise(r => setTimeout(() => r(undefined), 4000))]);
+        if (batalFlag) return;
+        if (user) {
+          // pastikan perangkat ini masih tercatat sebagai anggota; kalau belum, sambungkan lagi diam-diam
+          const m = await db.collection('members').doc(user.uid).get();
+          if (batalFlag) return;
+          if (!m.exists) {
+            const d = await db.collection('drivers').doc(id).get();
+            if (batalFlag) return;
+            if (!d.exists) {
+              localStorage.removeItem('radar_driver_id');
+              document.getElementById('idDriver').value = '';
+              document.getElementById('autoBox').hidden = true;
+              return;
+            }
+            await db.collection('members').doc(user.uid).set({
+              uid: user.uid, idDriver: id,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          }
+        }
+      } catch (err) { console.warn('Cek login otomatis dilewati:', err); } // offline: tetap lanjut
+      if (!batalFlag) goToRegionPage();
+    })();
   </script>
-  <script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./sw.js");
-    });
-  }
-</script>
 </body>
 </html>
