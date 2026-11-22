@@ -418,9 +418,9 @@ window.getPusatKota = function(){ return [window.REGION.center[0], window.REGION
     <span><strong>Ganti wilayah</strong><small id="wil-now">Pilih kota / kabupaten lain</small></span>
     <svg class="i go"><use href="#i-chev"/></svg>
   </a>
-  <a class="row" href="panti.html" style="margin-top:12px">
+  <a class="row" id="row-panti" href="panti.html" style="margin-top:12px">
     <span class="bd"><svg class="i"><use href="#i-heart"/></svg></span>
-    <span><strong>Daripada Dibuang, Sedekahin Aja</strong><small>Cari panti terdekat dari posisi kamu</small></span>
+    <span><strong>Daripada Dibuang, Sedekahin Aja</strong><small id="panti-sub">Cari panti terdekat dari posisi kamu</small></span>
     <svg class="i go"><use href="#i-chev"/></svg>
   </a>
 </section>
@@ -1264,6 +1264,13 @@ onSnapshot(col, (snap) => {
 <script>
 document.getElementById('heroTitle').innerHTML = window.REGION.heroTitle.join('<br>');
 document.title = 'Radar Order Fiktif - ' + window.REGION.shortName;
+// data panti baru ada untuk Kota & Kab. Semarang; wilayah lain diberi label "segera hadir"
+(function(){
+  if (window.REGION_ID === 'kota-semarang' || window.REGION_ID === 'kab-semarang') return;
+  var rp = document.getElementById('row-panti'), sub = document.getElementById('panti-sub');
+  if (rp){ rp.removeAttribute('href'); rp.style.opacity = '.55'; rp.style.pointerEvents = 'none'; rp.setAttribute('aria-disabled', 'true'); }
+  if (sub) sub.textContent = 'Segera hadir di wilayahmu';
+})();
 var _w = document.getElementById('wil-now'); if (_w) _w.textContent = 'Sekarang: ' + window.REGION.shortName;
 
 var sel = document.getElementById('rep-kecamatan');
