@@ -1240,6 +1240,7 @@ window.cloud = {
     const u = await ready;
     if (!u) return { ok: false, msg: 'Login anonim belum aktif di Firebase.' };
     const o = clean(r); o.uid = u.uid;
+    o.expireAt = Timestamp.fromMillis(Date.now() + 30 * 86400000); // dihapus otomatis oleh TTL
     const batch = writeBatch(db);
     if (!window.__admin){
       let n = 0;
