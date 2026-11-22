@@ -239,6 +239,71 @@
       text-transform: none;
     }
 
+    .plat-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #374151;
+      margin: 14px 0 8px;
+    }
+
+    .plat-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .plat-row label {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .plat-row input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .plat-row span {
+      display: inline-block;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1.5px solid #E5E7EB;
+      background: #F3F4F6;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #374151;
+    }
+
+    .plat-row input:checked + span {
+      background: #0F3D2E;
+      border-color: #0F3D2E;
+      color: #FFFFFF;
+    }
+
+    .plat-row input:focus-visible + span {
+      outline: 2px solid #0F3D2E;
+      outline-offset: 2px;
+    }
+
+    .honest-note {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin-top: 18px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #FFF6DD;
+      color: #5C4400;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .honest-note b {
+      color: #3F2F00;
+    }
+
     .btn-primary {
       width: 100%;
       margin-top: 18px;
@@ -314,6 +379,17 @@
         <div class="field">
           <label for="dafID">ID DRIVER</label>
           <input type="text" id="dafID" placeholder="ID Driver">
+        </div>
+        <span class="plat-label">PAKAI APLIKASI APA? (BOLEH LEBIH DARI SATU)</span>
+        <div class="plat-row" id="dafPlat">
+          <label><input type="checkbox" value="Shopee"><span>ShopeeFood</span></label>
+          <label><input type="checkbox" value="Gojek"><span>Gojek</span></label>
+          <label><input type="checkbox" value="Grab"><span>Grab</span></label>
+          <label><input type="checkbox" value="Maxim"><span>Maxim</span></label>
+        </div>
+        <div class="honest-note">
+          <span aria-hidden="true">⚠️</span>
+          <span><b>Isi dengan data asli.</b> ID driver ini terbuka dan bisa diisi siapa saja, jadi data yang jujur dan benar membuat titik di peta bisa dipercaya semua driver.</span>
         </div>
         <button type="button" id="btnDaftarSubmit" class="btn-primary" onclick="daftarDriver()">KIRIM PENGAJUAN →</button>
       </div>
@@ -399,6 +475,10 @@
       if (!nama || !wa || !idDriver) {
         return alert('Isi nama lengkap, no. WA, dan ID driver terlebih dahulu!');
       }
+      const platform = Array.from(document.querySelectorAll('#dafPlat input:checked')).map(i => i.value);
+      if (!platform.length) {
+        return alert('Pilih minimal satu aplikasi yang kamu pakai (ShopeeFood / Gojek / Grab / Maxim).');
+      }
 
       if (!/^[A-Z0-9_-]{3,30}$/.test(idDriver)) {
         return alert('ID Driver hanya boleh huruf, angka, strip (-) dan garis bawah (_), 3-30 karakter.');
@@ -421,6 +501,7 @@
           nama,
           wa,
           idDriver,
+          platform,
           wilayah: selectedRegion.id,
           wilayahNama: formatFullName(selectedRegion),
           status: 'pending',
@@ -431,6 +512,7 @@
         document.getElementById('dafNama').value = '';
         document.getElementById('dafWA').value = '';
         document.getElementById('dafID').value = '';
+        document.querySelectorAll('#dafPlat input').forEach(i => { i.checked = false; });
         showTab('login');
       } catch (err) {
         console.error(err);

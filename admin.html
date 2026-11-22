@@ -54,6 +54,7 @@
   .nm{font:700 16.5px var(--display);word-break:break-word}
   .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
   .chip{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--spruce-t);color:var(--spruce)}
+  .chip.plat{background:#FFF1D6;color:#6B4A00}
   .chip.id{background:var(--well);color:var(--ink);letter-spacing:.03em}
   .wa{margin-top:10px;font-size:14px;color:var(--ink2);display:flex;align-items:center;gap:8px}
   .acts{display:flex;gap:8px;margin-top:12px}
@@ -153,6 +154,10 @@ function prettyWil(id){
   return String(id).replace(/^kota-/, 'Kota ').replace(/^kab-/, 'Kab. ').replace(/-/g, ' ')
     .replace(/\b[a-z]/g, (c) => c.toUpperCase()).replace('Kab. ', 'Kab. ').replace('Kota ', 'Kota ');
 }
+const PLAT = { Shopee: 'ShopeeFood', Gojek: 'Gojek', Grab: 'Grab', Maxim: 'Maxim' };
+function platChips(arr, chips){
+  (Array.isArray(arr) ? arr : []).forEach((p) => chips.append(el('span', 'chip plat', PLAT[p] || String(p))));
+}
 function waNum(t){
   let n = String(t || '').replace(/\D/g, '');
   if (!n) return '';
@@ -202,7 +207,7 @@ function members(){
   const ids = new Set([...drivers.keys(), ...contacts.keys()]);
   return [...ids].map((id) => {
     const d = drivers.get(id) || {}, c = contacts.get(id) || {};
-    return { id, nama: c.nama || d.nama || '(tanpa nama)', wa: c.wa || d.wa || '', wilayah: c.wilayah || d.wilayah || '',
+    return { id, nama: c.nama || d.nama || '(tanpa nama)', wa: c.wa || d.wa || '', wilayah: c.wilayah || d.wilayah || '', platform: c.platform || d.platform || [],
              wilayahNama: d.wilayahNama || '' };
   }).sort((a, b) => a.nama.localeCompare(b.nama));
 }
@@ -223,6 +228,7 @@ function kartuAnggota(m){
   info.append(el('div', 'nm', m.nama));
   const chips = el('div', 'chips');
   chips.append(el('span', 'chip id', m.id), el('span', 'chip', m.wilayahNama || prettyWil(m.wilayah)));
+  platChips(m.platform, chips);
   info.append(chips);
   row.append(info);
   c.append(row, el('div', 'wa', 'WA: ' + (m.wa || '-')));
@@ -248,6 +254,7 @@ function kartuPending(d){
   info.append(el('div', 'nm', d.nama));
   const chips = el('div', 'chips');
   chips.append(el('span', 'chip id', d.idDriver), el('span', 'chip', d.wilayahNama || prettyWil(d.wilayah)));
+  platChips(d.platform, chips);
   info.append(chips);
   row.append(info);
   c.append(row, el('div', 'wa', 'WA: ' + (d.wa || '-')));
@@ -286,7 +293,7 @@ async function accDriver(id, btn){
       approvedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     // kontak disimpan terpisah, hanya admin yang bisa membaca
-    batch.set(db.collection('driver_contacts').doc(id), { idDriver: id, nama: d.nama, wa: d.wa, wilayah: d.wilayah });
+    batch.set(db.collection('driver_contacts').doc(id), { idDriver: id, nama: d.nama, wa: d.wa, platform: d.platform || [], wilayah: d.wilayah });
     batch.delete(db.collection('driver_requests').doc(id));
     await batch.commit();
   } catch (e) { console.error(e); alert('Gagal ACC. Cek Rules Firestore.'); btn.disabled = false; }
