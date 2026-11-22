@@ -315,5 +315,13 @@ async function hapusAnggota(m){
   } catch (e) { console.error(e); alert('Gagal menghapus. Cek Rules Firestore.'); }
 }
 </script>
+<script>
+// tombol kembali: kalau datang dari peta.html, mundur di riwayat (bukan menambah halaman baru)
+document.querySelectorAll('a[href^="peta.html#/setelan"]').forEach(function (a) {
+  a.addEventListener('click', function (e) {
+    if (history.length > 1 && document.referrer.indexOf('peta.html') > -1) { e.preventDefault(); history.back(); }
+  });
+});
+</script>
 </body>
 </html>

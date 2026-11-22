@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#E4EBE8" />
+<title>Panduan - Radar Order Fiktif</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{--fog:#E4EBE8;--paper:#FBF7F4;--well:#EFE8E4;--ink:#1D3532;--ink2:#58716D;--line:rgba(29,53,50,.12);--spruce:#2E5F57;--spruce-t:#EAF1EE;--bad:#B5304E;--bad-bg:#F6E0E4;--warn-bg:#F8EBCB;--warn-ink:#6E4708;
+    --display:'Bricolage Grotesque','Figtree',system-ui,sans-serif;
+    --shadow:0 1px 0 #fff inset,0 14px 26px -16px rgba(29,53,50,.38),0 2px 6px -2px rgba(29,53,50,.12)}
+  *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+  html{background:var(--fog)}
+  body{font-family:'Figtree',system-ui,sans-serif;color:var(--ink);background:var(--fog);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:var(--display);letter-spacing:-.01em}
+  a{color:inherit}
+  .i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .screen{max-width:480px;margin:0 auto;min-height:100dvh;position:relative;padding:0 18px 56px}
+  .contours{position:absolute;left:0;top:0;width:100%;height:300px;pointer-events:none;z-index:0;-webkit-mask-image:linear-gradient(#000 45%,transparent);mask-image:linear-gradient(#000 45%,transparent)}
+  .contours svg{width:100%;height:100%;display:block}
+  .contours path{fill:none;stroke:#2E5F57;stroke-opacity:.17;stroke-width:1.2}
+  .screen>*{position:relative;z-index:1}.screen>.contours{position:absolute;z-index:0}
+  .bar{padding:calc(env(safe-area-inset-top,0px) + 16px) 0 4px}
+  .round{width:44px;height:44px;border-radius:50%;background:var(--paper);box-shadow:var(--shadow);display:grid;place-items:center;text-decoration:none}
+  .page-title{font-size:28px;line-height:1.08;font-weight:800;margin-top:10px}
+  .page-sub{color:var(--ink2);margin-top:8px;max-width:38ch}
+  .tip{margin-top:18px;border-radius:16px;padding:12px 14px;font-size:14px;background:var(--warn-bg);color:var(--warn-ink)}
+  .acc{margin-top:18px;display:grid;gap:10px}
+  details{background:var(--paper);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+  summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px;font:700 16px var(--display)}
+  summary::-webkit-details-marker{display:none}
+  summary .n{flex:none;width:34px;height:34px;border-radius:12px;background:var(--well);color:var(--spruce);display:grid;place-items:center;font:800 15px var(--display)}
+  summary .i.go{margin-left:auto;color:var(--ink2);transition:transform .2s}
+  details[open] summary .i.go{transform:rotate(90deg)}
+  .isi{padding:0 16px 16px 16px;font-size:14.5px}
+  .isi p{margin-top:8px}
+  .isi ol,.isi ul{margin:8px 0 0 20px;display:grid;gap:5px}
+  .isi b{font-weight:700}
+  .cat{margin-top:10px;border-radius:14px;padding:10px 12px;font-size:13.5px;background:var(--spruce-t);color:var(--spruce)}
+  .cat.bad{background:var(--bad-bg);color:#7D1F35}
+  .dukung{margin-top:18px;background:var(--paper);border-radius:22px;box-shadow:var(--shadow);padding:20px;text-align:center}
+  .dukung h2{font-size:19px}.dukung p{color:var(--ink2);font-size:14px;margin:6px 0 12px}
+  .dukung img{width:100%;max-width:260px;border-radius:14px;background:#fff;padding:6px}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:26px;margin-top:18px;background:var(--spruce);color:#fff;font-weight:700;text-decoration:none;box-shadow:0 14px 24px -14px rgba(36,75,69,.9)}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+</svg>
+<main class="screen">
+  <div class="contours" aria-hidden="true"><svg viewBox="0 0 400 300" preserveAspectRatio="none"><path d="M-20 120C60 60 140 40 230 70S380 40 430 10"/><path d="M-20 150C70 90 150 70 240 100S380 70 430 40"/><path d="M-20 180C80 120 160 100 250 130S380 100 430 70"/><path d="M-20 210C90 150 170 130 260 160S380 130 430 100"/><path d="M-20 240C100 180 180 160 270 190S380 160 430 130"/></svg></div>
+  <div class="bar"><a class="round" id="kembali" href="peta.html#/setelan" aria-label="Kembali"><svg class="i"><use href="#i-back"/></svg></a></div>
+  <h1 class="page-title">Panduan aplikasi</h1>
+  <p class="page-sub">Cara pakai Radar Order Fiktif dari masuk sampai melapor. Ketuk judul untuk membuka.</p>
+  <div class="tip"><b>Intinya:</b> cek dulu sebelum jalan, dan kalau kena, lapor dengan bukti supaya driver lain tidak jadi korban.</div>
+
+  <div class="acc">
+    <details open><summary><span class="n">1</span>Masuk dan pilih wilayah<svg class="i go"><use href="#i-chev"/></svg></summary><div class="isi">
+      <ol><li>Buka halaman depan, lalu pilih kota atau kabupaten tempat kamu narik. Cakupannya 35 wilayah di Jawa Tengah. Bisa digeser atau dicari lewat kolom cari.</li>
+      <li>Kalau sudah punya akun, tulis <b>ID Driver</b> di tab <b>Login</b>, lalu tekan Masuk.</li>
+      <li>Kalau belum, buka tab <b>Daftar Driver</b>. Isi nama, no. WA, ID driver, dan aplikasi yang kamu pakai. Setelah itu tunggu <b>di-ACC admin</b>.</li>
+      <li>Mau lihat saja? Tekan <b>Lihat radar tanpa login</b>. Kamu bisa membaca laporan, tapi tidak bisa melapor.</li></ol>
+      <div class="cat bad">Isi data asli. Data yang jujur membuat titik di peta bisa dipercaya semua driver.</div>
+    </div></details>
+
+    <details><summary><span class="n">2</span>Beranda dan pencarian<svg class="i go"><use href="#i-chev"/></svg></summary><div class="isi">
+      <ul><li><b>Kolom cari:</b> ketik nama jalan, gang, nama akun, atau no. WA untuk melihat apakah pernah dilaporkan.</li>
+      <li><b>Ikon aplikasi di bawahnya:</b> saring laporan per aplikasi (Shopee, Gojek, Grab, Maxim).</li>
+      <li><b>Laporan terbaru:</b> ketuk satu laporan untuk membuka detail, kronologi, dan foto buktinya.</li>
+      <li><b>Ringkasan di atas:</b> menunjukkan jumlah titik, jumlah korban terkonfirmasi, dan kecamatan paling rawan.</li></ul>
+    </div></details>
+
+    <details><summary><span class="n">3</span>Cek risiko order<svg class="i go"><use href="#i-chev"/></svg></summary><div class="isi">
+      <ol><li>Tekan <b>Cek risiko order</b>, lalu pilih aplikasi yang sedang kamu pakai.</li>
+      <li>Jawab ciri-ciri orderan: nominal dan talangan, titik antar, akun customer, respon saat di-chat, dan respon saat ditelepon lewat aplikasi.</li>
+      <li>Tekan <b>Hitung risiko</b>. Hasilnya ada tiga: <b>Terpantau aman</b>, <b>Waspada</b>, atau <b>Bahaya fiktif tinggi</b>.</li>
+      <li>Di bagian bawah ada <b>Template chat</b> (minta ShareLoc, konfirmasi OTW, dan tolak talangan). Tekan <b>Salin template</b>, lalu tempel di chat aplikasi.</li></ol>
+      <div class="cat">Hasil ini hanya perkiraan dari ciri-ciri yang kamu isi, bukan kepastian. Tetap pakai penilaianmu sendiri.</div>
+    </div></details>
+
+    <details><summary><span class="n">4</span>Lapor order fiktif<svg class="i go"><use href="#i-chev"/></svg></summary><div class="isi">
+      <p>Hanya anggota yang sudah di-ACC admin yang bisa melapor. Langkahnya:</p>
+      <ol><li>Tekan <b>Lapor order fiktif</b> di beranda.</li>
+      <li>Pilih aplikasi, kecamatan, dan kategori modus.</li>
+      <li>Tulis alamat atau titik antar fiktif. Kalau sedang ada di lokasi, tekan <b>Pakai lokasiku sekarang</b> supaya titiknya akurat.</li>
+      <li>Isi nama akun atau no. WA customer. Sebaiknya sebagian disamarkan, misalnya r***a atau 0812-xxxx-4412.</li>
+      <li>Isi nominal dan kronologi singkat.</li>
+      <li><b>Lampirkan 2 foto bukti</b>: misalnya screenshot chat atau order, dan foto titik antar. Foto dikompres otomatis.</li>
+      <li>Tekan <b>Simpan laporan</b>.</li></ol>
+      <div class="cat bad">Foto wajib dua. Ini supaya laporan tidak jadi fitnah. Tutup nomor atau wajah orang lain di foto bila perlu.</div>
+      <ul style="margin-top:12px"><li>Batas <b>3 laporan per hari</b> per perangkat.</li>
+      <li>Foto bukti otomatis dihapus setelah 30 hari. Teks laporan, alamat, dan titik di peta tetap tersimpan.</li></ul>
+    </div></details>
+
+    <details><summary><span class="n">5</span>+1 Kena juga<svg class="i go"><use href="#i-chev"/></svg></summary><div class="isi">
+      <p>Kalau kamu juga pernah kena di alamat atau akun yang sama, buka detail laporannya lalu tekan <b>+1 Kena juga</b>. Angka korban terkonfirmasi bertambah, sehingga driver lain lebih yakin laporannya benar. Salah tekan? Tekan lagi untuk membatalkan.</p>
+    </div></details>
+
+    <details><summary><span class="n">6</span>Peta titik fiktif<svg class="i go"><use href="#i-chev"/></svg></summary><div class="isi">
+      <ul><li>Buka <b>Setelan</b>, lalu <b>Peta titik fiktif</b>. Semua laporan yang punya titik tampil di peta.</li>
+      <li>Titik otomatis dicari dari GPS, dari alamat yang kamu tulis, atau dari pusat kecamatan kalau alamat tidak ketemu.</li>
+      <li>Untuk menandai manual: ketuk peta, pilih <b>Laporan terkait</b>, lalu tekan <b>Simpan titik</b>.</li>
+      <li>Ketuk penanda di peta untuk membuka detail laporannya.</li></ul>
+    </div></details>
+
+    <details><summary><span class="n">7</span>Panti terdekat (sedekah makanan)<svg class="i go"><use href="#i-chev"/></svg></summary><div class="isi">
+      <p>Kena order fiktif dan makanannya sudah jadi? Daripada dibuang, buka <b>Setelan</b> lalu <b>Daripada Dibuang, Sedekahin Aja</b>.</p>
+      <ul><li>Daftar panti dikelompokkan per kecamatan. Saat ini tersedia untuk Kota dan Kabupaten Semarang.</li>
+      <li>Tekan <b>Terdekat</b> untuk mengurutkan dari posisimu.</li>
+      <li><b>Navigasi</b> membuka Google Maps. <b>Hubungi</b> membuka WhatsApp panti untuk bertanya dulu sebelum mengantar.</li></ul>
+      <div class="cat">Hubungi panti dulu supaya makanan yang kamu bawa memang bisa diterima.</div>
+    </div></details>
+
+    <details><summary><span class="n">8</span>Ganti wilayah<svg class="i go"><use href="#i-chev"/></svg></summary><div class="isi">
+      <p>Pindah narik ke kota lain? Di <b>Setelan</b>, tekan <b>Ganti wilayah</b>. Laporan yang tampil mengikuti wilayah yang kamu pilih.</p>
+    </div></details>
+
+    <details><summary><span class="n">9</span>Untuk admin<svg class="i go"><use href="#i-chev"/></svg></summary><div class="isi">
+      <ul><li><b>Login admin:</b> tekan tulisan kecil <b>Admin</b> di pojok kiri atas, lalu masuk dengan email dan kata sandi admin.</li>
+      <li><b>Panel admin:</b> di Setelan. Di tab Menunggu, tekan <b>ACC</b> atau <b>Tolak</b> untuk pengajuan driver. Di tab Anggota, anggota bisa dihapus.</li>
+      <li><b>Hapus laporan:</b> buka detail laporan, lalu tekan tombol tempat sampah dua kali.</li>
+      <li><b>Hapus foto lama:</b> di Setelan. Menghapus foto bukti yang sudah lewat 30 hari, sementara laporannya tetap ada. Tekan sekali seminggu atau sebulan.</li>
+      <li><b>Data panti:</b> di halaman panti, admin melihat tombol Tambah panti, serta Edit dan Hapus di tiap kartu.</li></ul>
+    </div></details>
+
+    <details><summary><span class="n">10</span>Kalau ada masalah<svg class="i go"><use href="#i-chev"/></svg></summary><div class="isi">
+      <ul><li><b>Tidak bisa melapor atau +1:</b> kamu belum login atau belum di-ACC admin.</li>
+      <li><b>Laporan ditolak:</b> batas 3 laporan hari ini mungkin habis, atau jam HP tidak tepat.</li>
+      <li><b>Foto gagal diproses:</b> coba foto lain, atau ambil ulang dengan kamera.</li>
+      <li><b>Titik tidak muncul di peta:</b> tandai manual lewat Setelan, Peta titik fiktif.</li>
+      <li><b>Laporan keliru atau tidak pantas:</b> hubungi admin supaya bisa dihapus.</li></ul>
+    </div></details>
+  </div>
+
+  <div class="dukung">
+    <h2>Dukung Radar Order Fiktif</h2>
+    <p>Aplikasi ini gratis dan dibuat sendiri. Kalau terbantu, boleh traktir kopi lewat QRIS. Nominal bebas.</p>
+    <img alt="QRIS dukungan" src="https://i.postimg.cc/7ZZcPcWt/1793770521-picsay.png" />
+  </div>
+  <a class="btn" href="peta.html">Kembali ke radar</a>
+</main>
+<script>
+// kembali: kalau datang dari peta.html, mundur di riwayat supaya tidak muter-muter
+document.getElementById('kembali').addEventListener('click', function (e) {
+  if (history.length > 1 && document.referrer.indexOf('peta.html') > -1) { e.preventDefault(); history.back(); }
+});
+</script>
+</body>
+</html>
