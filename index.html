@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pilih Wilayah Jateng - Radar Order Fiktif</title>
+  <title>Pilih Wilayah - Radar Order Fiktif</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -334,13 +334,13 @@
 </head>
 <body>
   <div class="top-header">
-    <span class="badge-jateng">JAWA TENGAH • 35 WILAYAH</span>
+    <span class="badge-jateng">JATENG &amp; DIY • 40 WILAYAH</span>
     <h1>Pilih Area Operasional</h1>
     <p>Geser atau cari kota/kabupatenmu agar radar hanya memuat titik rawan dan peta di wilayahmu.</p>
   </div>
 
   <div class="search-box">
-    <input type="text" id="searchRegion" class="search-input" placeholder="Cari kota atau kabupaten (misal: Semarang, Solo)..." oninput="filterRegions()" />
+    <input type="text" id="searchRegion" class="search-input" placeholder="Cari kota atau kabupaten (misal: Semarang, Sleman)..." oninput="filterRegions()" />
   </div>
 
   <div class="slider-wrapper" id="regionSlider"></div>
@@ -349,7 +349,7 @@
     <div class="login-card">
       <div class="area-badge">
         <span>Area: <b id="areaLabel">Kota Semarang</b></span>
-        <span class="pill">Jateng</span>
+        <span class="pill" id="provPill">Jateng</span>
       </div>
 
       <div class="tab-row">
@@ -399,7 +399,7 @@
   </div>
 
   <script>
-    const jatengRegions = Object.values(JATENG_REGIONS).map(r => ({ id: r.id, type: r.type, name: r.name }));
+    const jatengRegions = Object.values(JATENG_REGIONS).map(r => ({ id: r.id, type: r.type, name: r.name, prov: r.prov }));
 
     let selectedRegion = jatengRegions[0];
 
@@ -422,6 +422,8 @@
       const fullTitle = formatFullName(selectedRegion);
       const areaEl = document.getElementById('areaLabel');
       if (areaEl) areaEl.textContent = fullTitle;
+      const pill = document.getElementById('provPill');
+      if (pill) pill.textContent = selectedRegion.prov === 'DIY' ? 'DIY' : 'Jateng';
     }
 
     function renderSlider(list) {
