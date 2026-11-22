@@ -477,7 +477,7 @@
         }
 
         localStorage.setItem('radar_driver_id', idDriver);
-        goToRegionPage();
+        showMainPage();
       } catch (err) {
         console.error(err);
         alert('Gagal memeriksa ID driver. Cek koneksi internet.');
@@ -487,7 +487,7 @@
     }
 
     function openGuest() {
-      goToRegionPage();
+      location.reload();
     }
 
     const savedId = localStorage.getItem('radar_selected_region');
