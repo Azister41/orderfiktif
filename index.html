@@ -539,6 +539,12 @@
           return alert('ID belum aktif. Kalau belum daftar, daftar dulu di tab DAFTAR DRIVER. Kalau sudah, tunggu di-ACC Admin.');
         }
 
+        // hubungkan perangkat ini ke ID driver (dipakai aturan Firestore: hanya anggota yang boleh menulis)
+        await db.collection('members').doc(user.uid).set({
+          uid: user.uid,
+          idDriver,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
         localStorage.setItem('radar_driver_id', idDriver);
         goToRegionPage();
       } catch (err) {

@@ -575,7 +575,7 @@ function saveReports(){
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(reports)); } catch (e) { console.error('Gagal menyimpan', e); }
 }
 // hook Firebase: diisi oleh <script type="module"> di bawah; kalau Firebase gagal dimuat, aplikasi tetap jalan lokal
-window.cloud = { set(){}, del(){}, confirm(){}, patch(){}, add: async () => ({ ok: true }), cekBatas: async () => ({ ok: true }), login: async () => false, logout: async () => {} };
+window.cloud = { set(){}, del(){}, confirm(){}, patch(){}, canWrite: async () => true, add: async () => ({ ok: true }), cekBatas: async () => ({ ok: true }), login: async () => false, logout: async () => {} };
 
 /* ---------- garis kontur ---------- */
 function contourSVG(w, h, cx, cy, rings, seed){
@@ -759,6 +759,13 @@ function copyText(text, okMsg){
   } else { fallback(); }
 }
 
+/* ---------- hanya anggota ter-ACC yang boleh menulis ---------- */
+async function guardMember(){
+  if (await cloud.canWrite()) return true;
+  alert('Hanya anggota terdaftar yang bisa melapor, konfirmasi, atau menandai titik.\n\nDaftar dulu di halaman depan, tunggu di-ACC admin, lalu login dengan ID driver. Tamu hanya bisa melihat.');
+  return false;
+}
+
 /* ---------- lapor ---------- */
 // cari koordinat dari alamat lewat OpenStreetMap (Nominatim); null kalau tidak ketemu
 async function geocode(q){
@@ -780,6 +787,7 @@ async function submitReport(e){
   if (!form.checkValidity()){ form.reportValidity(); return; }
   const btn = form.querySelector('button[type=submit]');
   if (btn.disabled) return;
+  if (!(await guardMember())) return;
   btn.disabled = true;
 
   const cek = await cloud.cekBatas();
@@ -1095,8 +1103,8 @@ $('#questions').addEventListener('change', e => {
 });
 $('#calc').addEventListener('click', calculateRisk);
 $('#report-form').addEventListener('submit', submitReport);
-$('#d-confirm').addEventListener('click', toggleConfirm);
-$('#peta-save').addEventListener('click', savePoint);
+$('#d-confirm').addEventListener('click', async () => { if (await guardMember()) toggleConfirm(); });
+$('#peta-save').addEventListener('click', async () => { if (await guardMember()) savePoint(); });
 $('#peta-cancel').addEventListener('click', clearDraft);
 $('#peta-locate').addEventListener('click', locateMe);
 $('#rep-locate').addEventListener('click', () => {
@@ -1166,6 +1174,7 @@ let authDone; const ready = new Promise(res => { authDone = res; });
 onAuthStateChanged(auth, (u) => {
   if (!u){ signInAnonymously(auth).catch((e) => { console.error(e); authDone(null); }); return; }
   window.__admin = (u.uid === ADMIN_UID);
+  anggota = cekAnggota(u);
   authDone(u);
   if (typeof adminChanged === 'function') adminChanged();
 });
@@ -1173,6 +1182,16 @@ onAuthStateChanged(auth, (u) => {
 // hari dihitung zona WIB (UTC+7), harus sama dengan rules
 const hariWIB = () => Math.floor((Date.now() + 25200000) / 86400000);
 const limRef = (uid) => doc(db, 'limits', uid + '_' + hariWIB());
+// anggota = akun ini sudah login dengan ID driver (members/{uid}) dan ID-nya masih ada di drivers
+async function cekAnggota(u){
+  try {
+    const m = await getDoc(doc(db, 'members', u.uid));
+    if (!m.exists()) return false;
+    const d = await getDoc(doc(db, 'drivers', m.data().idDriver));
+    return d.exists();
+  } catch (e) { console.error(e); return false; }
+}
+let anggota = Promise.resolve(false);
 const SEEDED_KEY = 'radar_fiktif_smg_seeded_v1';
 const fail = (e) => { console.error('Firebase:', e); toast('Gagal sinkron ke server. Cek koneksi.'); };
 
@@ -1185,6 +1204,12 @@ const clean = (r) => {
 };
 
 window.cloud = {
+  async canWrite(){
+    const u = await ready;
+    if (!u) return false;
+    if (window.__admin) return true;
+    return await anggota;
+  },
   async cekBatas(){
     const u = await ready;
     if (!u) return { ok: false, msg: 'Login anonim belum aktif di Firebase.' };
