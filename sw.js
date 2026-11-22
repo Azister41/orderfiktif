@@ -1,4 +1,4 @@
-const CACHE_NAME = "radar-order-fiktif-v2";
+const CACHE_NAME = "radar-order-fiktif-v3";
 const ASSETS = [
   "./",
   "./index.html",
