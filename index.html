@@ -389,7 +389,7 @@
       <input type="file" id="rep-foto" accept="image/*" hidden />
       <button class="btn ghost sm" type="button" id="foto-pilih"><svg class="i"><use href="#i-grid"/></svg><span id="foto-txt">Ambil foto atau pilih dari galeri</span></button>
       <img class="foto-prev" id="foto-prev" alt="Pratinjau foto bukti" />
-      <p class="page-sub" style="font-size:13px;margin-top:6px">Screenshot chat, bukti order, atau foto titik antar. Foto dikompres otomatis dan dihapus sendiri setelah 30 hari.</p>
+      <p class="page-sub" style="font-size:13px;margin-top:6px">Screenshot chat, bukti order, atau foto titik antar. Foto dikompres otomatis dan dihapus setelah 30 hari. Laporan, alamat, dan titik di peta tetap ada.</p>
     </div>
 
     <button class="btn alert submit" type="submit"><svg class="i"><use href="#i-flag"/></svg>Simpan laporan</button>
@@ -414,6 +414,10 @@
     <span><strong>Daripada Dibuang, Sedekahin Aja</strong><small>Cari panti terdekat dari posisi kamu</small></span>
     <svg class="i go"><use href="#i-chev"/></svg>
   </a>
+  <button class="row" type="button" id="bersih" hidden style="margin-top:12px;width:100%;text-align:left">
+    <span class="bd"><svg class="i"><use href="#i-trash"/></svg></span>
+    <span><strong>Hapus foto lama</strong><small id="bersih-info">Hapus foto bukti lewat 30 hari</small></span>
+  </button>
 </section>
 
 <!-- ============ PETA ============ -->
@@ -851,7 +855,8 @@ function renderDetail(id){
     '</div>' +
     '<div class="d-story"><h2>Kronologi</h2><p>' + esc(r.kronologi) + '</p><p class="when">Dilaporkan ' + esc(r.timestamp) + '</p></div>' +
     '<div class="d-story"><h2>Foto bukti</h2><div id="d-foto" class="when">Memuat foto...</div></div>';
-  muatBukti(r.id);
+  if (r.buktiHapus) $('#d-foto').textContent = 'Foto bukti sudah dihapus setelah ' + BATAS_HARI + ' hari. Laporan tetap tersimpan.';
+  else muatBukti(r.id);
 
   updateConfirmBtn(r);
   resetDelete();
@@ -938,6 +943,7 @@ async function mintaPIN(){
 }
 // dipanggil modul Firebase tiap status login berubah
 function adminChanged(){
+  if (currentScreen === 'setelan') updateSetelan();
   if (currentScreen === 'detail') renderDetail(detailId);
   else if (currentScreen === 'peta' && map) refreshMarkers(false);
 }
@@ -1029,7 +1035,12 @@ function locateMe(){
   );
 }
 
+const BATAS_HARI = 30;
+const laporanLama = () => reports.filter(r => /^rep-\d{13}$/.test(r.id) && !r.buktiHapus && (r.createdAt || 0) < Date.now() - BATAS_HARI * 86400000);
 function updateSetelan(){
+  const lama = laporanLama();
+  $('#bersih').hidden = !isAdmin();
+  $('#bersih-info').textContent = lama.length ? 'Foto dari ' + lama.length + ' laporan sudah lewat ' + BATAS_HARI + ' hari' : 'Belum ada foto yang lewat ' + BATAS_HARI + ' hari';
   const n = reports.filter(hasPoint).length;
   $('#peta-count').textContent = n ? n + ' titik sudah ditandai di peta' : 'Tandai lokasi titik di peta';
 }
@@ -1152,6 +1163,17 @@ async function muatBukti(id){
   tampil(img);
 }
 
+$('#bersih').addEventListener('click', async () => {
+  if (!isAdmin()) return;
+  const lama = laporanLama();
+  if (!lama.length){ toast('Tidak ada foto yang lewat ' + BATAS_HARI + ' hari.'); return; }
+  if (!confirm('Hapus foto bukti dari ' + lama.length + ' laporan yang sudah lewat ' + BATAS_HARI + ' hari? Laporan, alamat, nama akun, dan titik peta tetap ada. Foto tidak bisa dikembalikan.')) return;
+  toast('Menghapus...');
+  const hasil = await cloud.bersihkan(lama.map(r => r.id));
+  toast(hasil.ok ? 'Foto dari ' + hasil.n + ' laporan dihapus. Penyimpanan lebih lega.' : 'Gagal menghapus. Pastikan login admin dan Rules benar.');
+  lama.forEach(r => buktiCache.delete(r.id));
+  updateSetelan();
+});
 $('#d-del').addEventListener('click', handleDelete);
 $('#d-copy').addEventListener('click', () => {
   const r = reports.find(x => x.id === detailId);
@@ -1240,7 +1262,6 @@ window.cloud = {
     const u = await ready;
     if (!u) return { ok: false, msg: 'Login anonim belum aktif di Firebase.' };
     const o = clean(r); o.uid = u.uid;
-    o.expireAt = Timestamp.fromMillis(Date.now() + 30 * 86400000); // dihapus otomatis oleh TTL
     const batch = writeBatch(db);
     if (!window.__admin){
       let n = 0;
@@ -1263,6 +1284,26 @@ window.cloud = {
     }
   },
   async del(id){ await ready; deleteDoc(doc(db, 'bukti', id)).catch(() => {}); return deleteDoc(doc(db, 'reports', id)).catch(fail); },
+  async bersihkan(ids){
+    await ready;
+    if (!window.__admin) return { ok: false };
+    try {
+      for (let i = 0; i < ids.length; i += 200){
+        const b = writeBatch(db);
+        ids.slice(i, i + 200).forEach(id => b.delete(doc(db, 'bukti', id)));
+        await b.commit();
+      }
+    } catch (e){ console.error(e); return { ok: false }; }
+    // tandai laporan supaya tidak dihitung lagi; kalau Rules menolak, foto tetap sudah terhapus
+    try {
+      for (let i = 0; i < ids.length; i += 400){
+        const b = writeBatch(db);
+        ids.slice(i, i + 400).forEach(id => b.update(doc(db, 'reports', id), { buktiHapus: true }));
+        await b.commit();
+      }
+    } catch (e){ console.error('Penanda gagal:', e); }
+    return { ok: true, n: ids.length };
+  },
   async bukti(id){ await ready; try { const sn = await getDoc(doc(db, 'bukti', id)); return sn.exists() ? sn.data().img : null; } catch (e){ console.error(e); return undefined; } },
   async confirm(id, n){ await ready; return updateDoc(doc(db, 'reports', id), { confirmations: increment(n) }).catch(fail); },
   async patch(id, data){ await ready; return updateDoc(doc(db, 'reports', id), data).catch(fail); },
