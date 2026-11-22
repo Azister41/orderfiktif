@@ -222,6 +222,7 @@
   .d-foto{width:100%;border-radius:var(--r-md);display:block;margin-top:10px;cursor:zoom-in}
   .zoom{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.92);display:grid;place-items:center;padding:12px}
   .zoom img{max-width:100%;max-height:100%;border-radius:8px}
+  .zoom-x{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);right:14px;width:46px;height:46px;border-radius:50%;background:#fff;color:var(--ink);font-size:30px;line-height:1;display:grid;place-items:center}
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
@@ -385,11 +386,13 @@
     </div>
 
     <div class="field">
-      <label for="rep-foto">Foto bukti (wajib)</label>
+      <label>Foto bukti (wajib 2 foto)</label>
       <input type="file" id="rep-foto" accept="image/*" hidden />
-      <button class="btn ghost sm" type="button" id="foto-pilih"><svg class="i"><use href="#i-grid"/></svg><span id="foto-txt">Ambil foto atau pilih dari galeri</span></button>
-      <img class="foto-prev" id="foto-prev" alt="Pratinjau foto bukti" />
-      <p class="page-sub" style="font-size:13px;margin-top:6px">Screenshot chat, bukti order, atau foto titik antar. Foto dikompres otomatis dan dihapus setelah 30 hari. Laporan, alamat, dan titik di peta tetap ada.</p>
+      <button class="btn ghost sm" type="button" data-slot="0"><svg class="i"><use href="#i-grid"/></svg><span id="foto-txt-0">Foto 1: ambil atau pilih dari galeri</span></button>
+      <img class="foto-prev" id="foto-prev-0" alt="Pratinjau foto 1" />
+      <button class="btn ghost sm" type="button" data-slot="1" style="margin-top:10px"><svg class="i"><use href="#i-grid"/></svg><span id="foto-txt-1">Foto 2: ambil atau pilih dari galeri</span></button>
+      <img class="foto-prev" id="foto-prev-1" alt="Pratinjau foto 2" />
+      <p class="page-sub" style="font-size:13px;margin-top:6px">Contoh: foto 1 screenshot chat atau order, foto 2 titik antar atau lokasi. Foto dikompres otomatis dan dihapus setelah 30 hari. Laporan, alamat, dan titik di peta tetap ada.</p>
     </div>
 
     <button class="btn alert submit" type="submit"><svg class="i"><use href="#i-flag"/></svg>Simpan laporan</button>
@@ -773,7 +776,7 @@ async function submitReport(e){
   e.preventDefault();
   const form = $('#report-form');
   if (!form.checkValidity()){ form.reportValidity(); return; }
-  if (!fotoData){ toast('Foto bukti wajib diisi supaya laporan tidak jadi fitnah.'); $('#foto-pilih').scrollIntoView({behavior:'smooth',block:'center'}); return; }
+  if (!fotoData[0] || !fotoData[1]){ toast('Wajib 2 foto bukti supaya laporan tidak jadi fitnah.'); document.querySelector('[data-slot="' + (fotoData[0] ? 1 : 0) + '"]').scrollIntoView({behavior:'smooth',block:'center'}); return; }
   const btn = form.querySelector('button[type=submit]');
   if (btn.disabled) return;
   btn.disabled = true;
@@ -815,7 +818,7 @@ async function submitReport(e){
   cur.confirmedByMe = true;
   saveReports();
   form.reset();
-  fotoData = null; $('#foto-prev').classList.remove('on'); $('#foto-txt').textContent = 'Ambil foto atau pilih dari galeri';
+  resetFoto();
   repLL = null;
   $('#rep-locate-txt').textContent = 'Pakai lokasiku sekarang';
   btn.disabled = false;
@@ -1112,7 +1115,7 @@ $('#rep-locate').addEventListener('click', () => {
 });
 
 /* ---------- foto bukti: kompres di HP sebelum diunggah ---------- */
-let fotoData = null;
+let fotoData = [null, null], slotAktif = 0;
 function kompres(file){
   return new Promise((res, rej) => {
     const url = URL.createObjectURL(file), im = new Image();
@@ -1133,36 +1136,58 @@ function kompres(file){
     im.src = url;
   });
 }
-$('#foto-pilih').addEventListener('click', () => $('#rep-foto').click());
+const FOTO_LABEL = ['Foto 1: ambil atau pilih dari galeri', 'Foto 2: ambil atau pilih dari galeri'];
+function resetFoto(){
+  fotoData = [null, null];
+  [0, 1].forEach(i => { $('#foto-prev-' + i).classList.remove('on'); $('#foto-txt-' + i).textContent = FOTO_LABEL[i]; });
+}
+document.querySelectorAll('[data-slot]').forEach(b => b.addEventListener('click', () => { slotAktif = +b.dataset.slot; $('#rep-foto').click(); }));
 $('#rep-foto').addEventListener('change', async (e) => {
   const f = e.target.files[0]; e.target.value = '';
   if (!f) return;
-  $('#foto-txt').textContent = 'Memproses foto...';
+  const i = slotAktif;
+  $('#foto-txt-' + i).textContent = 'Memproses foto...';
   try {
-    fotoData = await kompres(f);
-    const pv = $('#foto-prev'); pv.src = fotoData; pv.classList.add('on');
-    $('#foto-txt').textContent = 'Ganti foto (' + Math.round(fotoData.length * .75 / 1024) + ' KB)';
+    fotoData[i] = await kompres(f);
+    const pv = $('#foto-prev-' + i); pv.src = fotoData[i]; pv.classList.add('on');
+    $('#foto-txt-' + i).textContent = 'Ganti foto ' + (i + 1) + ' (' + Math.round(fotoData[i].length * .75 / 1024) + ' KB)';
   } catch (x){
-    fotoData = null; $('#foto-prev').classList.remove('on');
-    $('#foto-txt').textContent = 'Ambil foto atau pilih dari galeri';
+    fotoData[i] = null; $('#foto-prev-' + i).classList.remove('on');
+    $('#foto-txt-' + i).textContent = FOTO_LABEL[i];
     toast('Foto tidak bisa diproses. Coba foto lain.');
   }
 });
 const buktiCache = new Map();
+let zoomEl = null;
+function tutupZoom(){
+  if (!zoomEl) return;
+  zoomEl.remove(); zoomEl = null;
+  if (history.state && history.state.zoom) history.back();
+}
+function zoomFoto(src){
+  if (zoomEl) return;
+  const z = document.createElement('div'); z.className = 'zoom';
+  const im = new Image(); im.src = src; im.alt = 'Foto bukti diperbesar';
+  const x = document.createElement('button'); x.type = 'button'; x.className = 'zoom-x'; x.setAttribute('aria-label', 'Tutup foto'); x.textContent = '\u00d7';
+  z.append(im, x); z.onclick = tutupZoom;
+  document.body.append(z); zoomEl = z;
+  history.pushState({ zoom: 1 }, '');
+}
+// tombol Kembali bawaan HP menutup foto dulu, bukan meninggalkan halaman
+window.addEventListener('popstate', () => { if (zoomEl){ zoomEl.remove(); zoomEl = null; } });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') tutupZoom(); });
 async function muatBukti(id){
-  const tampil = (img) => {
+  const tampil = (arr) => {
     const b = $('#d-foto'); if (!b || detailId !== id) return;
-    if (img){ const im = new Image(); im.className = 'd-foto'; im.alt = 'Foto bukti'; im.src = img;
-      im.onclick = () => { const z = document.createElement('div'); z.className = 'zoom'; const i2 = new Image(); i2.src = img; z.append(i2); z.onclick = () => z.remove(); document.body.append(z); };
-      b.replaceChildren(im); }
-    else b.textContent = img === null ? 'Tidak ada foto (laporan lama atau sudah lewat 30 hari).' : 'Foto gagal dimuat. Cek koneksi.';
+    if (arr && arr.length){
+      b.replaceChildren(...arr.map((src, n) => { const im = new Image(); im.className = 'd-foto'; im.alt = 'Foto bukti ' + (n + 1); im.src = src; im.onclick = () => zoomFoto(src); return im; }));
+    } else b.textContent = arr === null ? 'Tidak ada foto (laporan lama atau sudah lewat 30 hari).' : 'Foto gagal dimuat. Cek koneksi.';
   };
   if (buktiCache.has(id)) return tampil(buktiCache.get(id));
-  const img = await cloud.bukti(id);
-  if (img !== undefined) buktiCache.set(id, img);
-  tampil(img);
+  const arr = await cloud.bukti(id);
+  if (arr !== undefined) buktiCache.set(id, arr);
+  tampil(arr);
 }
-
 $('#bersih').addEventListener('click', async () => {
   if (!isAdmin()) return;
   const lama = laporanLama();
@@ -1271,7 +1296,7 @@ window.cloud = {
     }
     batch.set(doc(db, 'reports', r.id), o);
     const kini = Date.now();
-    batch.set(doc(db, 'bukti', r.id), { img: foto, uid: u.uid, createdAt: kini, expireAt: Timestamp.fromMillis(kini + 30 * 86400000) });
+    batch.set(doc(db, 'bukti', r.id), { img: foto[0], img2: foto[1], uid: u.uid, createdAt: kini, expireAt: Timestamp.fromMillis(kini + 30 * 86400000) });
     try {
       // kalau offline, commit menunggu; setelah 15 dtk anggap antre dan lanjut
       await Promise.race([batch.commit(), new Promise(res => setTimeout(res, 15000))]);
@@ -1304,7 +1329,7 @@ window.cloud = {
     } catch (e){ console.error('Penanda gagal:', e); }
     return { ok: true, n: ids.length };
   },
-  async bukti(id){ await ready; try { const sn = await getDoc(doc(db, 'bukti', id)); return sn.exists() ? sn.data().img : null; } catch (e){ console.error(e); return undefined; } },
+  async bukti(id){ await ready; try { const sn = await getDoc(doc(db, 'bukti', id)); if (!sn.exists()) return null; const d = sn.data(); return [d.img, d.img2].filter(Boolean); } catch (e){ console.error(e); return undefined; } },
   async confirm(id, n){ await ready; return updateDoc(doc(db, 'reports', id), { confirmations: increment(n) }).catch(fail); },
   async patch(id, data){ await ready; return updateDoc(doc(db, 'reports', id), data).catch(fail); },
   async login(email, pw){
