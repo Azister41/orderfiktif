@@ -244,6 +244,23 @@
     .btn-guest strong {
       color: #274E43;
     }
+    
+   <style>
+  *{box-sizing:border-box}
+  .login-card{background:#fff; border-radius:20px; padding:20px; margin-top:16px; box-shadow:0 8px 24px rgba(0,0,0,.08)}
+  .tab-row{display:flex; gap:8px; margin-bottom:16px}
+  .tab-row button{flex:1; padding:12px; border-radius:12px; border:1px solid #ddd; background:#f3f4f6; font-weight:800; cursor:pointer}
+  .tab-row button.active{background:#0f3d2e; color:#fff; border-color:#0f3d2e}
+  .field label{display:block; font-size:12px; font-weight:800; letter-spacing:.5px; color:#374151; margin:14px 0 6px}
+  .field input{width:100%; padding:14px 14px; border-radius:12px; border:1.5px solid #e5e7eb; font-size:15px; outline:none; text-transform:uppercase}
+  .field input:focus{border-color:#0f3d2e}
+  .field input.normal{text-transform:none}
+  .btn-primary{width:100%; margin-top:18px; padding:15px; border:none; border-radius:14px; background:#0f3d2e; color:#fff; font-size:16px; font-weight:800; cursor:pointer}
+  .btn-guest{display:block; text-align:center; margin-top:16px; color:#374151; font-size:14px; text-decoration:none}
+  .area-badge{display:flex; justify-content:space-between; align-items:center; background:#e8f5ee; padding:12px 14px; border-radius:12px; font-size:14px}
+  .area-badge b{color:#0f3d2e}
+  .pill{background:#0f3d2e; color:#fff; padding:4px 10px; border-radius:20px; font-size:12px}
+    
   </style>
 </head>
 <body>
@@ -261,32 +278,50 @@
   <div class="slider-wrapper" id="regionSlider"></div>
 
   <div class="login-section">
-    <div class="login-card">
-      <div class="selected-banner">
-        <span>Area: <strong id="selectedLabel">Kota Semarang</strong></span>
-        <span class="selected-tag">Jateng</span>
+  <div class="login-card">
+
+  <div class="area-badge">
+    <span>Area: <b id="areaLabel">Kota Semarang</b></span>
+    <span class="pill">Jateng</span>
+  </div>
+
+  <!-- TOMBOL TAB -->
+  <div class="tab-row" style="margin-top:16px">
+    <button type="button" id="btnTabLogin" class="active" onclick="showTab('login')">LOGIN</button>
+    <button type="button" id="btnTabDaftar" onclick="showTab('daftar')">DAFTAR DRIVER</button>
+  </div>
+
+  <!-- TAB LOGIN -->
+  <div id="tab-login">
+    <form onsubmit="handleLogin(event)">
+      <div class="field">
+        <label>ID DRIVER</label>
+        <input type="text" id="idDriver" placeholder="CONTOH: DRV-001" required>
       </div>
+      <button type="submit" class="btn-primary">MASUK KE RADAR →</button>
+    </form>
+  </div>
 
-      <form onsubmit="handleLogin(event)">
-        <div class="form-group">
-          <label for="wa">No. WhatsApp Driver</label>
-          <input type="text" id="wa" class="input-pill" placeholder="0812-xxxx-xxxx" required />
-        </div>
+  <!-- TAB DAFTAR -->
+  <div id="tab-daftar" style="display:none">
+    <div class="field">
+      <label>NAMA LENGKAP</label>
+      <input type="text" id="dafNama" class="normal" placeholder="Contoh: Budi Santoso">
+    </div>
+    <div class="field">
+      <label>NO. WA</label>
+      <input type="text" id="dafWA" class="normal" placeholder="0812xxxxxxx">
+    </div>
+    <div class="field">
+      <label>ID DRIVER</label>
+      <input type="text" id="dafID" placeholder="CONTOH: DRV-001">
+    </div>
+    <button type="button" class="btn-primary" onclick="daftarDriver()">KIRIM PENGAJUAN →</button>
+  </div>
 
-        <div class="form-group">
-          <label for="pin">PIN / Kata Sandi</label>
-          <div class="password-wrap">
-            <input type="password" id="pin" class="input-pill" placeholder="Masukkan kata sandi" required />
-            <button type="button" class="toggle-pw" onclick="togglePin()">Lihat</button>
-          </div>
-        </div>
+</div>
 
-        <button type="submit" class="btn-primary" id="submitBtn">Masuk ke Radar Kota Semarang</button>
-      </form>
-
-      <button type="button" class="btn-guest" onclick="openGuest()">
-        Atau <strong>lihat radar tanpa login →</strong>
-      </button>
+<a class="btn-guest" href="#" onclick="openGuest();return false;">Atau <b>lihat radar tanpa login →</b></a>
     </div>
   </div>
 
@@ -334,32 +369,53 @@
     function formatFullName(reg) {
       return `${reg.type === 'Kota' ? 'Kota' : 'Kab.'} ${reg.name}`;
     }
+    
+async function daftarDriver(){
+  var data = {
+    nama: document.getElementById('dafNama').value.trim(),
+    wa: document.getElementById('dafWA').value.trim(),
+    idDriver: document.getElementById('dafID').value.trim().toUpperCase(),
+    wilayah: selectedRegion.id,
+    status: 'pending',
+    createdAt: new Date()
+  };
+  if(!data.nama || !data.wa || !data.idDriver) return alert('Isi kabeh disik!');
+  
+  // Simpen neng Firebase
+  await db.collection('driver_requests').doc(data.idDriver).set(data);
+  alert('Pengajuan dikirim! Tunggu di-ACC Admin yo bolo!');
+}
 
-    function updateLabels() {
-      const fullTitle = formatFullName(selectedRegion);
-      document.getElementById('selectedLabel').textContent = fullTitle;
-      document.getElementById('submitBtn').textContent = `Masuk ke Radar ${fullTitle}`;
-    }
+function updateLabels() {
+  const fullTitle = formatFullName(selectedRegion);
+  var a = document.getElementById('selectedLabel');
+  if(a) a.textContent = fullTitle;
+  var b = document.getElementById('areaLabel');
+  if(b) b.textContent = fullTitle;
+  var c = document.getElementById('submitBtn');
+  if(c) c.textContent = `Masuk ke Radar ${fullTitle}`;
+}
 
-    function renderSlider(list) {
-      const slider = document.getElementById('regionSlider');
-      slider.innerHTML = '';
-      list.forEach(reg => {
-        const isActive = reg.id === selectedRegion.id;
-        const card = document.createElement('div');
-        card.className = `region-card ${isActive ? 'active' : ''}`;
-        card.onclick = () => selectRegion(reg);
-        card.innerHTML = `
-          <div>
-            <div class="region-type">${reg.type}</div>
-            <div class="region-name">${reg.name}</div>
-          </div>
-          <div class="region-meta">${isActive ? 'Terpilih' : 'Pilih area →'}</div>
-        `;
-        slider.appendChild(card);
-      });
-    }
-
+function renderSlider(list) {
+  // Cari regionGrid dulu, nek gak ono baru regionSlider (ben 2-2 ne iso)
+  const slider = document.getElementById('regionGrid') || document.getElementById('regionSlider');
+  if(!slider) return;
+  slider.innerHTML = '';
+  list.forEach(reg => {
+    const isActive = reg.id === selectedRegion.id;
+    const card = document.createElement('div');
+    card.className = `region-card ${isActive ? 'active' : ''}`;
+    card.onclick = () => selectRegion(reg);
+    card.innerHTML = `
+      <div>
+        <div class="region-type">${reg.type}</div>
+        <div class="region-name">${reg.name}</div>
+      </div>
+      <div class="region-meta">${isActive ? 'Terpilih' : 'Pilih area →'}</div>
+    `;
+    slider.appendChild(card);
+  });
+}
     function selectRegion(reg) {
       selectedRegion = reg;
       updateLabels();
@@ -367,12 +423,13 @@
     }
 
     function filterRegions() {
-      const q = document.getElementById('searchRegion').value.toLowerCase();
-      const filtered = jatengRegions.filter(r =>
-        `${r.type} ${r.name}`.toLowerCase().includes(q)
-      );
-      renderSlider(filtered);
-    }
+  // Nek gak ono kotak search, tampillke kabeh wae, ojo error
+  const q = (document.getElementById('searchRegion')?.value || '').toLowerCase();
+  const filtered = jatengRegions.filter(r =>
+    `${r.type} ${r.name}`.toLowerCase().includes(q)
+  );
+  renderSlider(filtered);
+}
 
     function togglePin() {
       const pin = document.getElementById('pin');
@@ -386,23 +443,35 @@
       }
     }
 
-    function handleLogin(e) {
+async function handleLogin(e){
   e.preventDefault();
-  localStorage.setItem('radar_wilayah', JSON.stringify(selectedRegion));
-  localStorage.setItem('regionId', selectedRegion.id);
-  localStorage.setItem('kotaAktif', selectedRegion.id);
-  window.location.href = 'peta.html';
-}
+  var idDriver = document.getElementById('idDriver').value.trim().toUpperCase();
+  
+  // CEK NENG TABEL DRIVERS (sing wes di-ACC)
+  var doc = await db.collection('drivers').doc(idDriver).get();
+  if(!doc.exists){
+    // CEK NEK IJIK PENDING
+    var req = await db.collection('driver_requests').doc(idDriver).get();
+    if(req.exists) return alert('ID mu ijik nunggu ACC Admin, sabar yo!');
+    return alert('ID ora ketemu! Daftar disik neng tombol DAFTAR!');
+  }
 
-function openGuest() {
-  localStorage.setItem('radar_wilayah', JSON.stringify(selectedRegion));
+  // NEK LOLOS, MLEBU
+  localStorage.setItem('radar_driver_id', idDriver);
   localStorage.setItem('regionId', selectedRegion.id);
-  localStorage.setItem('kotaAktif', selectedRegion.id);
   window.location.href = 'peta.html';
 }
 
     updateLabels();
     renderSlider(jatengRegions);
+    
+    function showTab(t){
+  document.getElementById('tab-login').style.display = t==='login' ? 'block' : 'none';
+  document.getElementById('tab-daftar').style.display = t==='daftar' ? 'block' : 'none';
+  document.getElementById('btnTabLogin').classList.toggle('active', t==='login');
+  document.getElementById('btnTabDaftar').classList.toggle('active', t==='daftar');
+}
+    
   </script>
 </body>
 </html>
