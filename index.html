@@ -3,23 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
- 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyAJvwV16QykhyfJ42LmxU6WCIF9Vs5zzw",
-  authDomain: "orderfiktif.firebaseapp.com",
-  projectId: "orderfiktif",
-  storageBucket: "orderfiktif.firebasestorage.app",
-  messagingSenderId: "302212019912",
-  appId: "1:302212019912:web:8e104f4d4a3f7b017b57fd"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-</script>
   <title>Pilih Wilayah Jateng - Radar Order Fiktif</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAJwwVl16QykhyfJ42LmxU6WClF9Vs5zzw",
+      authDomain: "orderfiktif.firebaseapp.com",
+      projectId: "orderfiktif",
+      storageBucket: "orderfiktif.firebasestorage.app",
+      messagingSenderId: "302212019912",
+      appId: "1:302212019912:web:8e104f4d4a3f7b017b57fd"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
   <style>
     * {
       box-sizing: border-box;
@@ -34,9 +33,8 @@ const db = firebase.firestore();
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
       gap: 12px;
-      padding: 14px 0 24px 0;
+      padding: 14px 0 28px 0;
       overflow-x: hidden;
     }
 
@@ -96,7 +94,7 @@ const db = firebase.firestore();
       gap: 10px;
       overflow-x: auto;
       scroll-snap-type: x mandatory;
-      padding: 2px 20px 2px 20px;
+      padding: 2px 20px;
       scrollbar-width: none;
     }
 
@@ -154,137 +152,117 @@ const db = firebase.firestore();
     }
 
     .login-card {
-      background-color: #F7F5F2;
-      border-radius: 22px;
-      padding: 18px;
-      box-shadow: 0 6px 20px rgba(30, 43, 39, 0.05);
+      background-color: #FFFFFF;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(30, 43, 39, 0.08);
     }
 
-    .selected-banner {
-      background-color: #E5EDE9;
-      color: #274E43;
-      padding: 9px 14px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-      margin-bottom: 14px;
+    .area-badge {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      background: #E8F5EE;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 14px;
     }
 
-    .selected-tag {
-      font-size: 11px;
+    .area-badge b {
+      color: #0F3D2E;
+    }
+
+    .pill {
+      background: #0F3D2E;
+      color: #FFFFFF;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
       font-weight: 700;
-      background-color: #D3E1DB;
-      padding: 2px 8px;
-      border-radius: 999px;
     }
 
-    .form-group {
-      margin-bottom: 12px;
+    .tab-row {
+      display: flex;
+      gap: 8px;
+      margin: 16px 0;
     }
 
-    label {
+    .tab-row button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #DDD;
+      background: #F3F4F6;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .tab-row button.active {
+      background: #0F3D2E;
+      color: #FFFFFF;
+      border-color: #0F3D2E;
+    }
+
+    .field label {
       display: block;
       font-size: 12px;
-      font-weight: 600;
-      color: #2C3B36;
-      margin-bottom: 5px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #374151;
+      margin: 14px 0 6px;
     }
 
-    .input-pill {
+    .field input {
       width: 100%;
-      height: 44px;
-      background-color: #FFFFFF;
-      border: 1.5px solid #E2E7E4;
-      border-radius: 999px;
-      padding: 0 16px;
-      font-size: 13.5px;
-      color: #1E2B27;
+      padding: 13px 14px;
+      border-radius: 12px;
+      border: 1.5px solid #E5E7EB;
+      font-size: 15px;
       outline: none;
+      text-transform: uppercase;
     }
 
-    .input-pill:focus {
-      border-color: #274E43;
+    .field input:focus {
+      border-color: #0F3D2E;
     }
 
-    .password-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-
-    .password-wrap .input-pill {
-      padding-right: 54px;
-    }
-
-    .toggle-pw {
-      position: absolute;
-      right: 14px;
-      background: none;
-      border: none;
-      color: #274E43;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
+    .field input.normal {
+      text-transform: none;
     }
 
     .btn-primary {
       width: 100%;
-      height: 46px;
-      background-color: #274E43;
-      color: #FFFFFF;
+      margin-top: 18px;
+      padding: 15px;
       border: none;
-      border-radius: 999px;
-      font-size: 14px;
-      font-weight: 700;
+      border-radius: 14px;
+      background: #0F3D2E;
+      color: #FFFFFF;
+      font-size: 15px;
+      font-weight: 800;
       cursor: pointer;
-      margin-top: 6px;
-      box-shadow: 0 5px 12px rgba(39, 78, 67, 0.18);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     .btn-guest {
-      width: 100%;
-      background: none;
-      border: none;
-      color: #4A5B55;
-      font-size: 12.5px;
-      font-weight: 600;
-      margin-top: 12px;
-      padding-top: 10px;
-      border-top: 1px solid #E8ECE9;
-      cursor: pointer;
+      display: block;
+      text-align: center;
+      margin-top: 16px;
+      color: #374151;
+      font-size: 13.5px;
+      text-decoration: none;
     }
-
-    .btn-guest strong {
-      color: #274E43;
-    }
-    
-   <style>
-  *{box-sizing:border-box}
-  .login-card{background:#fff; border-radius:20px; padding:20px; margin-top:16px; box-shadow:0 8px 24px rgba(0,0,0,.08)}
-  .tab-row{display:flex; gap:8px; margin-bottom:16px}
-  .tab-row button{flex:1; padding:12px; border-radius:12px; border:1px solid #ddd; background:#f3f4f6; font-weight:800; cursor:pointer}
-  .tab-row button.active{background:#0f3d2e; color:#fff; border-color:#0f3d2e}
-  .field label{display:block; font-size:12px; font-weight:800; letter-spacing:.5px; color:#374151; margin:14px 0 6px}
-  .field input{width:100%; padding:14px 14px; border-radius:12px; border:1.5px solid #e5e7eb; font-size:15px; outline:none; text-transform:uppercase}
-  .field input:focus{border-color:#0f3d2e}
-  .field input.normal{text-transform:none}
-  .btn-primary{width:100%; margin-top:18px; padding:15px; border:none; border-radius:14px; background:#0f3d2e; color:#fff; font-size:16px; font-weight:800; cursor:pointer}
-  .btn-guest{display:block; text-align:center; margin-top:16px; color:#374151; font-size:14px; text-decoration:none}
-  .area-badge{display:flex; justify-content:space-between; align-items:center; background:#e8f5ee; padding:12px 14px; border-radius:12px; font-size:14px}
-  .area-badge b{color:#0f3d2e}
-  .pill{background:#0f3d2e; color:#fff; padding:4px 10px; border-radius:20px; font-size:12px}
-    
   </style>
 </head>
 <body>
-
   <div class="top-header">
     <span class="badge-jateng">JAWA TENGAH • 35 WILAYAH</span>
     <h1>Pilih Area Operasional</h1>
-    <p>Geser atau cari kota/kabupatenmu agar radar hanya memuat titik rawan di wilayahmu.</p>
+    <p>Geser atau cari kota/kabupatenmu agar radar hanya memuat titik rawan dan peta di wilayahmu.</p>
   </div>
 
   <div class="search-box">
@@ -294,90 +272,84 @@ const db = firebase.firestore();
   <div class="slider-wrapper" id="regionSlider"></div>
 
   <div class="login-section">
-  <div class="login-card">
-
-  <div class="area-badge">
-    <span>Area: <b id="areaLabel">Kota Semarang</b></span>
-    <span class="pill">Jateng</span>
-  </div>
-
-  <!-- TOMBOL TAB -->
-  <div class="tab-row" style="margin-top:16px">
-    <button type="button" id="btnTabLogin" class="active" onclick="showTab('login')">LOGIN</button>
-    <button type="button" id="btnTabDaftar" onclick="showTab('daftar')">DAFTAR DRIVER</button>
-  </div>
-
-  <!-- TAB LOGIN -->
-  <div id="tab-login">
-    <form onsubmit="handleLogin(event)">
-      <div class="field">
-        <label>ID DRIVER</label>
-        <input type="text" id="idDriver" placeholder="ID DRIVER" required>
+    <div class="login-card">
+      <div class="area-badge">
+        <span>Area: <b id="areaLabel">Kota Semarang</b></span>
+        <span class="pill">Jateng</span>
       </div>
-      <button type="submit" class="btn-primary">MASUK KE RADAR →</button>
-    </form>
-  </div>
 
-  <!-- TAB DAFTAR -->
-  <div id="tab-daftar" style="display:none">
-    <div class="field">
-      <label>NAMA LENGKAP</label>
-      <input type="text" id="dafNama" class="normal" placeholder="Contoh: Budi Santoso">
-    </div>
-    <div class="field">
-      <label>NO. WA</label>
-      <input type="text" id="dafWA" class="normal" placeholder="0812xxxxxxx">
-    </div>
-    <div class="field">
-      <label>ID DRIVER</label>
-      <input type="text" id="dafID" placeholder="ID DRIVER">
-    </div>
-    <button type="button" class="btn-primary" onclick="daftarDriver()">KIRIM PENGAJUAN →</button>
-  </div>
+      <div class="tab-row">
+        <button type="button" id="btnTabLogin" class="active" onclick="showTab('login')">LOGIN</button>
+        <button type="button" id="btnTabDaftar" onclick="showTab('daftar')">DAFTAR DRIVER</button>
+      </div>
 
-</div>
+      <div id="tab-login">
+        <form onsubmit="handleLogin(event)">
+          <div class="field">
+            <label for="idDriver">ID DRIVER</label>
+            <input type="text" id="idDriver" placeholder="CONTOH: SMG-001" required>
+          </div>
+          <button type="submit" id="btnLoginSubmit" class="btn-primary">MASUK KE RADAR →</button>
+        </form>
+      </div>
 
-<a class="btn-guest" href="#" onclick="openGuest();return false;">Atau <b>lihat radar tanpa login →</b></a>
+      <div id="tab-daftar" style="display:none">
+        <div class="field">
+          <label for="dafNama">NAMA LENGKAP</label>
+          <input type="text" id="dafNama" class="normal" placeholder="Contoh: Budi Santoso">
+        </div>
+        <div class="field">
+          <label for="dafWA">NO. WA</label>
+          <input type="text" id="dafWA" class="normal" placeholder="0812xxxxxxx">
+        </div>
+        <div class="field">
+          <label for="dafID">ID DRIVER</label>
+          <input type="text" id="dafID" placeholder="CONTOH: SMG-001">
+        </div>
+        <button type="button" id="btnDaftarSubmit" class="btn-primary" onclick="daftarDriver()">KIRIM PENGAJUAN →</button>
+      </div>
     </div>
+
+    <a class="btn-guest" href="#" onclick="openGuest();return false;">Atau <b>lihat radar tanpa login →</b></a>
   </div>
 
   <script>
     const jatengRegions = [
-      { id: 'kota-semarang', type: 'Kota', name: 'Semarang', file: 'kota-semarang.html' },
-      { id: 'kab-semarang', type: 'Kabupaten', name: 'Semarang', file: 'kab-semarang.html' },
-      { id: 'kota-surakarta', type: 'Kota', name: 'Surakarta (Solo)', file: 'kota-surakarta.html' },
-      { id: 'kota-salatiga', type: 'Kota', name: 'Salatiga', file: 'kota-salatiga.html' },
-      { id: 'kota-magelang', type: 'Kota', name: 'Magelang', file: 'kota-magelang.html' },
-      { id: 'kota-pekalongan', type: 'Kota', name: 'Pekalongan', file: 'kota-pekalongan.html' },
-      { id: 'kota-tegal', type: 'Kota', name: 'Tegal', file: 'kota-tegal.html' },
-      { id: 'kab-kendal', type: 'Kabupaten', name: 'Kendal', file: 'kab-kendal.html' },
-      { id: 'kab-demak', type: 'Kabupaten', name: 'Demak', file: 'kab-demak.html' },
-      { id: 'kab-grobogan', type: 'Kabupaten', name: 'Grobogan', file: 'kab-grobogan.html' },
-      { id: 'kab-banyumas', type: 'Kabupaten', name: 'Banyumas', file: 'kab-banyumas.html' },
-      { id: 'kab-cilacap', type: 'Kabupaten', name: 'Cilacap', file: 'kab-cilacap.html' },
-      { id: 'kab-purbalingga', type: 'Kabupaten', name: 'Purbalingga', file: 'kab-purbalingga.html' },
-      { id: 'kab-banjarnegara', type: 'Kabupaten', name: 'Banjarnegara', file: 'kab-banjarnegara.html' },
-      { id: 'kab-kebumen', type: 'Kabupaten', name: 'Kebumen', file: 'kab-kebumen.html' },
-      { id: 'kab-purworejo', type: 'Kabupaten', name: 'Purworejo', file: 'kab-purworejo.html' },
-      { id: 'kab-wonosobo', type: 'Kabupaten', name: 'Wonosobo', file: 'kab-wonosobo.html' },
-      { id: 'kab-magelang', type: 'Kabupaten', name: 'Magelang', file: 'kab-magelang.html' },
-      { id: 'kab-temanggung', type: 'Kabupaten', name: 'Temanggung', file: 'kab-temanggung.html' },
-      { id: 'kab-boyolali', type: 'Kabupaten', name: 'Boyolali', file: 'kab-boyolali.html' },
-      { id: 'kab-klaten', type: 'Kabupaten', name: 'Klaten', file: 'kab-klaten.html' },
-      { id: 'kab-sukoharjo', type: 'Kabupaten', name: 'Sukoharjo', file: 'kab-sukoharjo.html' },
-      { id: 'kab-wonogiri', type: 'Kabupaten', name: 'Wonogiri', file: 'kab-wonogiri.html' },
-      { id: 'kab-karanganyar', type: 'Kabupaten', name: 'Karanganyar', file: 'kab-karanganyar.html' },
-      { id: 'kab-sragen', type: 'Kabupaten', name: 'Sragen', file: 'kab-sragen.html' },
-      { id: 'kab-kudus', type: 'Kabupaten', name: 'Kudus', file: 'kab-kudus.html' },
-      { id: 'kab-jepara', type: 'Kabupaten', name: 'Jepara', file: 'kab-jepara.html' },
-      { id: 'kab-pati', type: 'Kabupaten', name: 'Pati', file: 'kab-pati.html' },
-      { id: 'kab-rembang', type: 'Kabupaten', name: 'Rembang', file: 'kab-rembang.html' },
-      { id: 'kab-blora', type: 'Kabupaten', name: 'Blora', file: 'kab-blora.html' },
-      { id: 'kab-batang', type: 'Kabupaten', name: 'Batang', file: 'kab-batang.html' },
-      { id: 'kab-pekalongan', type: 'Kabupaten', name: 'Pekalongan', file: 'kab-pekalongan.html' },
-      { id: 'kab-pemalang', type: 'Kabupaten', name: 'Pemalang', file: 'kab-pemalang.html' },
-      { id: 'kab-tegal', type: 'Kabupaten', name: 'Tegal', file: 'kab-tegal.html' },
-      { id: 'kab-brebes', type: 'Kabupaten', name: 'Brebes', file: 'kab-brebes.html' }
+      { id: 'kota-semarang', type: 'Kota', name: 'Semarang' },
+      { id: 'kab-semarang', type: 'Kabupaten', name: 'Semarang' },
+      { id: 'kota-surakarta', type: 'Kota', name: 'Surakarta (Solo)' },
+      { id: 'kota-salatiga', type: 'Kota', name: 'Salatiga' },
+      { id: 'kota-magelang', type: 'Kota', name: 'Magelang' },
+      { id: 'kota-pekalongan', type: 'Kota', name: 'Pekalongan' },
+      { id: 'kota-tegal', type: 'Kota', name: 'Tegal' },
+      { id: 'kab-kendal', type: 'Kabupaten', name: 'Kendal' },
+      { id: 'kab-demak', type: 'Kabupaten', name: 'Demak' },
+      { id: 'kab-grobogan', type: 'Kabupaten', name: 'Grobogan' },
+      { id: 'kab-banyumas', type: 'Kabupaten', name: 'Banyumas' },
+      { id: 'kab-cilacap', type: 'Kabupaten', name: 'Cilacap' },
+      { id: 'kab-purbalingga', type: 'Kabupaten', name: 'Purbalingga' },
+      { id: 'kab-banjarnegara', type: 'Kabupaten', name: 'Banjarnegara' },
+      { id: 'kab-kebumen', type: 'Kabupaten', name: 'Kebumen' },
+      { id: 'kab-purworejo', type: 'Kabupaten', name: 'Purworejo' },
+      { id: 'kab-wonosobo', type: 'Kabupaten', name: 'Wonosobo' },
+      { id: 'kab-magelang', type: 'Kabupaten', name: 'Magelang' },
+      { id: 'kab-temanggung', type: 'Kabupaten', name: 'Temanggung' },
+      { id: 'kab-boyolali', type: 'Kabupaten', name: 'Boyolali' },
+      { id: 'kab-klaten', type: 'Kabupaten', name: 'Klaten' },
+      { id: 'kab-sukoharjo', type: 'Kabupaten', name: 'Sukoharjo' },
+      { id: 'kab-wonogiri', type: 'Kabupaten', name: 'Wonogiri' },
+      { id: 'kab-karanganyar', type: 'Kabupaten', name: 'Karanganyar' },
+      { id: 'kab-sragen', type: 'Kabupaten', name: 'Sragen' },
+      { id: 'kab-kudus', type: 'Kabupaten', name: 'Kudus' },
+      { id: 'kab-jepara', type: 'Kabupaten', name: 'Jepara' },
+      { id: 'kab-pati', type: 'Kabupaten', name: 'Pati' },
+      { id: 'kab-rembang', type: 'Kabupaten', name: 'Rembang' },
+      { id: 'kab-blora', type: 'Kabupaten', name: 'Blora' },
+      { id: 'kab-batang', type: 'Kabupaten', name: 'Batang' },
+      { id: 'kab-pekalongan', type: 'Kabupaten', name: 'Pekalongan' },
+      { id: 'kab-pemalang', type: 'Kabupaten', name: 'Pemalang' },
+      { id: 'kab-tegal', type: 'Kabupaten', name: 'Tegal' },
+      { id: 'kab-brebes', type: 'Kabupaten', name: 'Brebes' }
     ];
 
     let selectedRegion = jatengRegions[0];
@@ -385,109 +357,148 @@ const db = firebase.firestore();
     function formatFullName(reg) {
       return `${reg.type === 'Kota' ? 'Kota' : 'Kab.'} ${reg.name}`;
     }
-    
-async function daftarDriver(){
-  var data = {
-    nama: document.getElementById('dafNama').value.trim(),
-    wa: document.getElementById('dafWA').value.trim(),
-    idDriver: document.getElementById('dafID').value.trim().toUpperCase(),
-    wilayah: selectedRegion.id,
-    status: 'pending',
-    createdAt: new Date()
-  };
-  if(!data.nama || !data.wa || !data.idDriver) return alert('Isi kabeh disik!');
-  
-  // Simpen neng Firebase
-  await db.collection('driver_requests').doc(data.idDriver).set(data);
-  alert('Pengajuan dikirim! Tunggu di-ACC Admin yo bolo!');
-}
 
-function updateLabels() {
-  const fullTitle = formatFullName(selectedRegion);
-  var a = document.getElementById('selectedLabel');
-  if(a) a.textContent = fullTitle;
-  var b = document.getElementById('areaLabel');
-  if(b) b.textContent = fullTitle;
-  var c = document.getElementById('submitBtn');
-  if(c) c.textContent = `Masuk ke Radar ${fullTitle}`;
-}
+    function saveSelectedRegion() {
+      localStorage.setItem('radar_wilayah', JSON.stringify(selectedRegion));
+      localStorage.setItem('radar_selected_region', selectedRegion.id);
+    }
 
-function renderSlider(list) {
-  // Cari regionGrid dulu, nek gak ono baru regionSlider (ben 2-2 ne iso)
-  const slider = document.getElementById('regionGrid') || document.getElementById('regionSlider');
-  if(!slider) return;
-  slider.innerHTML = '';
-  list.forEach(reg => {
-    const isActive = reg.id === selectedRegion.id;
-    const card = document.createElement('div');
-    card.className = `region-card ${isActive ? 'active' : ''}`;
-    card.onclick = () => selectRegion(reg);
-    card.innerHTML = `
-      <div>
-        <div class="region-type">${reg.type}</div>
-        <div class="region-name">${reg.name}</div>
-      </div>
-      <div class="region-meta">${isActive ? 'Terpilih' : 'Pilih area →'}</div>
-    `;
-    slider.appendChild(card);
-  });
-}
+    function goToRegionPage() {
+      saveSelectedRegion();
+      window.location.href = `wilayah.html?area=${encodeURIComponent(selectedRegion.id)}`;
+    }
+
+    function updateLabels() {
+      const fullTitle = formatFullName(selectedRegion);
+      const areaEl = document.getElementById('areaLabel');
+      if (areaEl) areaEl.textContent = fullTitle;
+    }
+
+    function renderSlider(list) {
+      const slider = document.getElementById('regionSlider');
+      if (!slider) return;
+      slider.innerHTML = '';
+      list.forEach(reg => {
+        const isActive = reg.id === selectedRegion.id;
+        const card = document.createElement('div');
+        card.className = `region-card ${isActive ? 'active' : ''}`;
+        card.onclick = () => selectRegion(reg);
+        card.innerHTML = `
+          <div>
+            <div class="region-type">${reg.type}</div>
+            <div class="region-name">${reg.name}</div>
+          </div>
+          <div class="region-meta">${isActive ? 'Terpilih' : 'Pilih area →'}</div>
+        `;
+        slider.appendChild(card);
+      });
+    }
+
     function selectRegion(reg) {
       selectedRegion = reg;
+      saveSelectedRegion();
       updateLabels();
       filterRegions();
     }
 
     function filterRegions() {
-  // Nek gak ono kotak search, tampillke kabeh wae, ojo error
-  const q = (document.getElementById('searchRegion')?.value || '').toLowerCase();
-  const filtered = jatengRegions.filter(r =>
-    `${r.type} ${r.name}`.toLowerCase().includes(q)
-  );
-  renderSlider(filtered);
-}
+      const q = (document.getElementById('searchRegion')?.value || '').toLowerCase();
+      const filtered = jatengRegions.filter(r =>
+        `${r.type} ${r.name}`.toLowerCase().includes(q)
+      );
+      renderSlider(filtered);
+    }
 
-    function togglePin() {
-      const pin = document.getElementById('pin');
-      const btn = document.querySelector('.toggle-pw');
-      if (pin.type === 'password') {
-        pin.type = 'text';
-        btn.textContent = 'Tutup';
-      } else {
-        pin.type = 'password';
-        btn.textContent = 'Lihat';
+    function showTab(t) {
+      document.getElementById('tab-login').style.display = t === 'login' ? 'block' : 'none';
+      document.getElementById('tab-daftar').style.display = t === 'daftar' ? 'block' : 'none';
+      document.getElementById('btnTabLogin').classList.toggle('active', t === 'login');
+      document.getElementById('btnTabDaftar').classList.toggle('active', t === 'daftar');
+    }
+
+    async function daftarDriver() {
+      const btn = document.getElementById('btnDaftarSubmit');
+      const nama = document.getElementById('dafNama').value.trim();
+      const wa = document.getElementById('dafWA').value.trim();
+      const idDriver = document.getElementById('dafID').value.trim().toUpperCase();
+
+      if (!nama || !wa || !idDriver) {
+        return alert('Isi nama lengkap, no. WA, dan ID driver terlebih dahulu!');
+      }
+
+      btn.disabled = true;
+      try {
+        const existingDriver = await db.collection('drivers').doc(idDriver).get();
+        if (existingDriver.exists) {
+          alert('ID Driver ini sudah terdaftar dan aktif! Silakan langsung tab LOGIN.');
+          showTab('login');
+          document.getElementById('idDriver').value = idDriver;
+          return;
+        }
+
+        await db.collection('driver_requests').doc(idDriver).set({
+          nama,
+          wa,
+          idDriver,
+          wilayah: selectedRegion.id,
+          wilayahNama: formatFullName(selectedRegion),
+          status: 'pending',
+          createdAt: new Date()
+        });
+
+        alert(`Pengajuan untuk ${formatFullName(selectedRegion)} terkirim! Tunggu di-ACC Admin ya.`);
+        document.getElementById('dafNama').value = '';
+        document.getElementById('dafWA').value = '';
+        document.getElementById('dafID').value = '';
+        showTab('login');
+      } catch (err) {
+        console.error(err);
+        alert('Gagal mengirim pengajuan. Cek koneksi atau aturan Firestore.');
+      } finally {
+        btn.disabled = false;
       }
     }
 
-async function handleLogin(e){
-  e.preventDefault();
-  var idDriver = document.getElementById('idDriver').value.trim().toUpperCase();
-  
-  // CEK NENG TABEL DRIVERS (sing wes di-ACC)
-  var doc = await db.collection('drivers').doc(idDriver).get();
-  if(!doc.exists){
-    // CEK NEK IJIK PENDING
-    var req = await db.collection('driver_requests').doc(idDriver).get();
-    if(req.exists) return alert('ID mu ijik nunggu ACC Admin, sabar yo!');
-    return alert('ID ora ketemu! Daftar disik neng tombol DAFTAR!');
-  }
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnLoginSubmit');
+      const idDriver = document.getElementById('idDriver').value.trim().toUpperCase();
+      if (!idDriver) return alert('Masukkan ID Driver dulu!');
 
-  // NEK LOLOS, MLEBU
-  localStorage.setItem('radar_driver_id', idDriver);
-  localStorage.setItem('regionId', selectedRegion.id);
-  window.location.href = 'peta.html';
-}
+      btn.disabled = true;
+      try {
+        const docSnap = await db.collection('drivers').doc(idDriver).get();
+        if (!docSnap.exists) {
+          const reqSnap = await db.collection('driver_requests').doc(idDriver).get();
+          if (reqSnap.exists) {
+            return alert('ID kamu masih menunggu ACC Admin. Silakan coba lagi setelah di-ACC.');
+          }
+          return alert('ID tidak ditemukan! Silakan daftar dulu di tab DAFTAR DRIVER.');
+        }
 
+        localStorage.setItem('radar_driver_id', idDriver);
+        goToRegionPage();
+      } catch (err) {
+        console.error(err);
+        alert('Gagal memeriksa ID driver. Cek koneksi internet.');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function openGuest() {
+      goToRegionPage();
+    }
+
+    const savedId = localStorage.getItem('radar_selected_region');
+    if (savedId) {
+      const found = jatengRegions.find(r => r.id === savedId);
+      if (found) selectedRegion = found;
+    }
+
+    saveSelectedRegion();
     updateLabels();
     renderSlider(jatengRegions);
-    
-    function showTab(t){
-  document.getElementById('tab-login').style.display = t==='login' ? 'block' : 'none';
-  document.getElementById('tab-daftar').style.display = t==='daftar' ? 'block' : 'none';
-  document.getElementById('btnTabLogin').classList.toggle('active', t==='login');
-  document.getElementById('btnTabDaftar').classList.toggle('active', t==='daftar');
-}
-    
   </script>
 </body>
 </html>
