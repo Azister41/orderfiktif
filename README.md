@@ -1,4 +1,4 @@
-# 🛵 Radar Order Fiktif - Semarang
+# 🛵 Radar Order Fiktif - Jawa Tengah
 
 **Cek dulu sebelum jalan, hemat bensin.**
 
