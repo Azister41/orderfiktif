@@ -18,7 +18,16 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const auth = firebase.auth();
+    // semua pengunjung login anonim otomatis (dipakai aturan Firestore), tanpa form
+    const authReady = new Promise(res => {
+      auth.onAuthStateChanged(u => {
+        if (u) res(u);
+        else auth.signInAnonymously().catch(e => { console.error(e); res(null); });
+      });
+    });
   </script>
+  <script src="jateng.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -314,43 +323,7 @@
   </div>
 
   <script>
-    const jatengRegions = [
-      { id: 'kota-semarang', type: 'Kota', name: 'Semarang' },
-      { id: 'kab-semarang', type: 'Kabupaten', name: 'Semarang' },
-      { id: 'kota-surakarta', type: 'Kota', name: 'Surakarta (Solo)' },
-      { id: 'kota-salatiga', type: 'Kota', name: 'Salatiga' },
-      { id: 'kota-magelang', type: 'Kota', name: 'Magelang' },
-      { id: 'kota-pekalongan', type: 'Kota', name: 'Pekalongan' },
-      { id: 'kota-tegal', type: 'Kota', name: 'Tegal' },
-      { id: 'kab-kendal', type: 'Kabupaten', name: 'Kendal' },
-      { id: 'kab-demak', type: 'Kabupaten', name: 'Demak' },
-      { id: 'kab-grobogan', type: 'Kabupaten', name: 'Grobogan' },
-      { id: 'kab-banyumas', type: 'Kabupaten', name: 'Banyumas' },
-      { id: 'kab-cilacap', type: 'Kabupaten', name: 'Cilacap' },
-      { id: 'kab-purbalingga', type: 'Kabupaten', name: 'Purbalingga' },
-      { id: 'kab-banjarnegara', type: 'Kabupaten', name: 'Banjarnegara' },
-      { id: 'kab-kebumen', type: 'Kabupaten', name: 'Kebumen' },
-      { id: 'kab-purworejo', type: 'Kabupaten', name: 'Purworejo' },
-      { id: 'kab-wonosobo', type: 'Kabupaten', name: 'Wonosobo' },
-      { id: 'kab-magelang', type: 'Kabupaten', name: 'Magelang' },
-      { id: 'kab-temanggung', type: 'Kabupaten', name: 'Temanggung' },
-      { id: 'kab-boyolali', type: 'Kabupaten', name: 'Boyolali' },
-      { id: 'kab-klaten', type: 'Kabupaten', name: 'Klaten' },
-      { id: 'kab-sukoharjo', type: 'Kabupaten', name: 'Sukoharjo' },
-      { id: 'kab-wonogiri', type: 'Kabupaten', name: 'Wonogiri' },
-      { id: 'kab-karanganyar', type: 'Kabupaten', name: 'Karanganyar' },
-      { id: 'kab-sragen', type: 'Kabupaten', name: 'Sragen' },
-      { id: 'kab-kudus', type: 'Kabupaten', name: 'Kudus' },
-      { id: 'kab-jepara', type: 'Kabupaten', name: 'Jepara' },
-      { id: 'kab-pati', type: 'Kabupaten', name: 'Pati' },
-      { id: 'kab-rembang', type: 'Kabupaten', name: 'Rembang' },
-      { id: 'kab-blora', type: 'Kabupaten', name: 'Blora' },
-      { id: 'kab-batang', type: 'Kabupaten', name: 'Batang' },
-      { id: 'kab-pekalongan', type: 'Kabupaten', name: 'Pekalongan' },
-      { id: 'kab-pemalang', type: 'Kabupaten', name: 'Pemalang' },
-      { id: 'kab-tegal', type: 'Kabupaten', name: 'Tegal' },
-      { id: 'kab-brebes', type: 'Kabupaten', name: 'Brebes' }
-    ];
+    const jatengRegions = Object.values(JATENG_REGIONS).map(r => ({ id: r.id, type: r.type, name: r.name }));
 
     let selectedRegion = jatengRegions[0];
 
@@ -361,11 +334,12 @@
     function saveSelectedRegion() {
       localStorage.setItem('radar_wilayah', JSON.stringify(selectedRegion));
       localStorage.setItem('radar_selected_region', selectedRegion.id);
+      localStorage.setItem('regionId', selectedRegion.id);
     }
 
     function goToRegionPage() {
       saveSelectedRegion();
-      window.location.href = `index.html?area=${encodeURIComponent(selectedRegion.id)}`;
+      window.location.href = 'peta.html';
     }
 
     function updateLabels() {
@@ -426,8 +400,15 @@
         return alert('Isi nama lengkap, no. WA, dan ID driver terlebih dahulu!');
       }
 
+      if (!/^[A-Z0-9_-]{3,30}$/.test(idDriver)) {
+        return alert('ID Driver hanya boleh huruf, angka, strip (-) dan garis bawah (_), 3-30 karakter.');
+      }
+      if (nama.length > 80 || wa.length > 20) return alert('Nama atau no. WA terlalu panjang.');
+
       btn.disabled = true;
       try {
+        const user = await authReady;
+        if (!user) return alert('Login anonim belum aktif di Firebase (Authentication > Sign-in method > Anonymous).');
         const existingDriver = await db.collection('drivers').doc(idDriver).get();
         if (existingDriver.exists) {
           alert('ID Driver ini sudah terdaftar dan aktif! Silakan langsung tab LOGIN.');
@@ -443,7 +424,7 @@
           wilayah: selectedRegion.id,
           wilayahNama: formatFullName(selectedRegion),
           status: 'pending',
-          createdAt: new Date()
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
         alert(`Pengajuan untuk ${formatFullName(selectedRegion)} terkirim! Tunggu di-ACC Admin ya.`);
@@ -453,7 +434,7 @@
         showTab('login');
       } catch (err) {
         console.error(err);
-        alert('Gagal mengirim pengajuan. Cek koneksi atau aturan Firestore.');
+        alert(err && err.code === 'permission-denied' ? 'Ditolak server. Kalau ID ini sudah pernah diajukan, tunggu ACC Admin.' : 'Gagal mengirim pengajuan. Cek koneksi internet.');
       } finally {
         btn.disabled = false;
       }
@@ -465,19 +446,19 @@
       const idDriver = document.getElementById('idDriver').value.trim().toUpperCase();
       if (!idDriver) return alert('Masukkan ID Driver dulu!');
 
+      if (!/^[A-Z0-9_-]{3,30}$/.test(idDriver)) return alert('Format ID Driver tidak valid.');
+
       btn.disabled = true;
       try {
+        const user = await authReady;
+        if (!user) return alert('Login anonim belum aktif di Firebase (Authentication > Sign-in method > Anonymous).');
         const docSnap = await db.collection('drivers').doc(idDriver).get();
         if (!docSnap.exists) {
-          const reqSnap = await db.collection('driver_requests').doc(idDriver).get();
-          if (reqSnap.exists) {
-            return alert('ID kamu masih menunggu ACC Admin. Silakan coba lagi setelah di-ACC.');
-          }
-          return alert('ID tidak ditemukan! Silakan daftar dulu di tab DAFTAR DRIVER.');
+          return alert('ID belum aktif. Kalau belum daftar, daftar dulu di tab DAFTAR DRIVER. Kalau sudah, tunggu di-ACC Admin.');
         }
 
         localStorage.setItem('radar_driver_id', idDriver);
-        showMainPage();
+        goToRegionPage();
       } catch (err) {
         console.error(err);
         alert('Gagal memeriksa ID driver. Cek koneksi internet.');
@@ -487,7 +468,7 @@
     }
 
     function openGuest() {
-      location.reload();
+      goToRegionPage();
     }
 
     const savedId = localStorage.getItem('radar_selected_region');

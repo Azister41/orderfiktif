@@ -1,111 +1,137 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
 <title>Admin - ACC Driver</title>
 <style>
-  body{font-family:sans-serif; padding:16px; background:#f2f2f2}
+  body{font-family:system-ui,sans-serif; padding:16px; background:#f2f2f2; color:#1D3532}
   .card{background:#fff; padding:14px; margin-bottom:12px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.1)}
   button{padding:10px 14px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-right:8px}
   .acc{background:#16a34a; color:#fff}
   .tolak{background:#dc2626; color:#fff}
-  input{width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #ccc; box-sizing:border-box}
-  #halamanAdmin{display:none}
+  .out{background:#e5e7eb}
+  input{width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #ccc; box-sizing:border-box; font-size:15px}
+  #halamanAdmin{display:none; max-width:560px; margin:0 auto}
   #halamanLogin{max-width:400px; margin:60px auto; background:#fff; padding:20px; border-radius:14px; text-align:center}
+  #pesan{color:#dc2626; display:none}
 </style>
 </head>
 <body>
 
-<!-- HALAMAN 1: KUNCI PASSWORD -->
+<!-- HALAMAN 1: LOGIN ADMIN (Firebase Authentication) -->
 <div id="halamanLogin">
   <h2>🔐 Login Admin</h2>
-  <p>Mek admin sing iso mlebu!</p>
-  <input type="password" id="passAdmin" placeholder="Password Admin">
-  <button class="acc" style="width:100%" onclick="cekPassword()">MASUK</button>
-  <p id="pesanSalah" style="color:red; display:none">Password salah bolo!</p>
+  <p>Hanya akun admin yang bisa masuk.</p>
+  <input type="email" id="emailAdmin" placeholder="Email admin" autocomplete="username">
+  <input type="password" id="passAdmin" placeholder="Kata sandi" autocomplete="current-password">
+  <button class="acc" style="width:100%;margin:0" onclick="loginAdmin()">MASUK</button>
+  <p id="pesan"></p>
 </div>
 
-<!-- HALAMAN 2: LIST DRIVER (didhelikne disik) -->
+<!-- HALAMAN 2: DAFTAR PENGAJUAN -->
 <div id="halamanAdmin">
   <h2>Admin - Pengajuan Driver</h2>
-  <button onclick="logoutAdmin()">Logout</button>
-  <p>Sing nunggu ACC:</p>
-  <div id="list">Loading...</div>
+  <button class="out" onclick="logoutAdmin()">Logout</button>
+  <p>Yang menunggu ACC:</p>
+  <div id="list">Memuat...</div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-// === GANTI PASSWORD NENG KENE, SAK KAREP ABANG ===
-const PASSWORD_ADMIN = '421541';
+// UID akun admin (Firebase Console > Authentication > Users). Harus sama dengan di firestore.rules
+const ADMIN_UID = "UrwGR11yBNOSCpmxjuWeQlfevJ12";
 
-const firebaseConfig = {
+firebase.initializeApp({
   apiKey: "AIzaSyAJwwVl16QykhyfJ42LmxU6WClF9Vs5zzw",
   authDomain: "orderfiktif.firebaseapp.com",
   projectId: "orderfiktif",
   storageBucket: "orderfiktif.firebasestorage.app",
   messagingSenderId: "302212019912",
   appId: "1:302212019912:web:8e104f4d4a3f7b017b57fd"
-};
-firebase.initializeApp(firebaseConfig);
+});
+const auth = firebase.auth();
 const db = firebase.firestore();
+const $ = (id) => document.getElementById(id);
+let unsub = null;
 
-// CEK PASSWORD
-function cekPassword(){
-  var p = document.getElementById('passAdmin').value;
-  if(p === PASSWORD_ADMIN){
-    sessionStorage.setItem('isAdmin', '1');
-    tampilkeAdmin();
-  } else {
-    document.getElementById('pesanSalah').style.display = 'block';
+function pesan(t){ const p = $('pesan'); p.textContent = t; p.style.display = t ? 'block' : 'none'; }
+
+async function loginAdmin(){
+  pesan('');
+  try {
+    await auth.signInWithEmailAndPassword($('emailAdmin').value.trim(), $('passAdmin').value);
+  } catch (e) {
+    console.error(e);
+    pesan('Email atau kata sandi salah.');
   }
 }
+function logoutAdmin(){ auth.signOut(); }
 
-function logoutAdmin(){
-  sessionStorage.removeItem('isAdmin');
-  location.reload();
-}
+auth.onAuthStateChanged((u) => {
+  if (unsub) { unsub(); unsub = null; }
+  if (u && u.uid === ADMIN_UID) {
+    $('halamanLogin').style.display = 'none';
+    $('halamanAdmin').style.display = 'block';
+    mulaiDaftar();
+  } else {
+    $('halamanAdmin').style.display = 'none';
+    $('halamanLogin').style.display = 'block';
+    if (u && !u.isAnonymous) { pesan('Akun ini bukan admin.'); auth.signOut(); }
+  }
+});
 
-// NEK WES TAU LOGIN, LANGSUNG MLEBU (gak perlu ketik maneh)
-if(sessionStorage.getItem('isAdmin') === '1'){
-  tampilkeAdmin();
-}
-
-function tampilkeAdmin(){
-  document.getElementById('halamanLogin').style.display = 'none';
-  document.getElementById('halamanAdmin').style.display = 'block';
-
-  // Tampilke sing pending
-  db.collection('driver_requests').where('status','==','pending').onSnapshot(snap=>{
-    var el = document.getElementById('list');
-    if(snap.empty){ el.innerHTML = '<p>Gak ono pengajuan, resik bolo!</p>'; return; }
-    var html = '';
-    snap.forEach(doc=>{
-      var d = doc.data();
-      html += '<div class="card">'
-        + '<b>'+d.idDriver+'</b> - '+d.nama+'<br>'
-        + 'WA: '+d.wa+'<br>'
-        + 'Wilayah: '+d.wilayah+'<br><br>'
-        + '<button class="acc" onclick="accDriver(\''+doc.id+'\')">✅ ACC</button>'
-        + '<button class="tolak" onclick="tolakDriver(\''+doc.id+'\')">❌ TOLAK</button>'
-        + '</div>';
+function mulaiDaftar(){
+  unsub = db.collection('driver_requests').where('status', '==', 'pending').onSnapshot((snap) => {
+    const el = $('list');
+    el.textContent = '';
+    if (snap.empty) { el.textContent = 'Tidak ada pengajuan.'; return; }
+    snap.forEach((doc) => {
+      const d = doc.data();
+      const card = document.createElement('div');
+      card.className = 'card';
+      // textContent supaya isi pengajuan tidak bisa menjalankan script (XSS)
+      const b = document.createElement('b'); b.textContent = d.idDriver;
+      card.append(b, ' - ' + d.nama, document.createElement('br'),
+        'WA: ' + d.wa, document.createElement('br'),
+        'Wilayah: ' + (d.wilayahNama || d.wilayah), document.createElement('br'), document.createElement('br'));
+      const acc = document.createElement('button'); acc.className = 'acc'; acc.textContent = '✅ ACC';
+      acc.onclick = () => accDriver(doc.id);
+      const tolak = document.createElement('button'); tolak.className = 'tolak'; tolak.textContent = '❌ TOLAK';
+      tolak.onclick = () => tolakDriver(doc.id);
+      card.append(acc, tolak);
+      el.appendChild(card);
     });
-    el.innerHTML = html;
-  });
+  }, (e) => { console.error(e); $('list').textContent = 'Gagal memuat. Cek Rules Firestore.'; });
 }
 
 async function accDriver(id){
-  var data = (await db.collection('driver_requests').doc(id).get()).data();
-  await db.collection('drivers').doc(id).set({...data, status:'approved'});
-  await db.collection('driver_requests').doc(id).delete();
-  alert('Driver '+id+' wes di-ACC!');
+  try {
+    const d = (await db.collection('driver_requests').doc(id).get()).data();
+    if (!d) return;
+    const batch = db.batch();
+    // drivers dibaca publik saat login, jadi isinya minimal (tanpa nama & WA)
+    batch.set(db.collection('drivers').doc(id), {
+      idDriver: id, wilayah: d.wilayah, status: 'approved',
+      approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    // data kontak disimpan terpisah, hanya admin yang bisa membaca
+    batch.set(db.collection('driver_contacts').doc(id), { idDriver: id, nama: d.nama, wa: d.wa, wilayah: d.wilayah });
+    batch.delete(db.collection('driver_requests').doc(id));
+    await batch.commit();
+    alert('Driver ' + id + ' sudah di-ACC.');
+  } catch (e) { console.error(e); alert('Gagal ACC. Cek Rules Firestore.'); }
 }
 
 async function tolakDriver(id){
-  if(!confirm('Yakin tolak '+id+'?')) return;
-  await db.collection('driver_requests').doc(id).delete();
-  alert('Driver '+id+' ditolak!');
+  if (!confirm('Yakin tolak ' + id + '?')) return;
+  try {
+    await db.collection('driver_requests').doc(id).delete();
+    alert('Driver ' + id + ' ditolak.');
+  } catch (e) { console.error(e); alert('Gagal menolak. Cek Rules Firestore.'); }
 }
 </script>
 </body>

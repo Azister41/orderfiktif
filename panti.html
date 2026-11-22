@@ -99,7 +99,7 @@
   <div class="contours" aria-hidden="true">
     <svg viewBox="0 0 400 300" preserveAspectRatio="none"><path d="M-20 120C60 60 140 40 230 70S380 40 430 10"/><path d="M-20 150C70 90 150 70 240 100S380 70 430 40"/><path d="M-20 180C80 120 160 100 250 130S380 100 430 70"/><path d="M-20 210C90 150 170 130 260 160S380 130 430 100"/><path d="M-20 240C100 180 180 160 270 190S380 160 430 130"/></svg>
   </div>
-  <div class="bar"><a class="round" href="index.html" aria-label="Kembali"><svg class="i"><use href="#i-back"/></svg></a></div>
+  <div class="bar"><a class="round" href="peta.html#/setelan" aria-label="Kembali"><svg class="i"><use href="#i-back"/></svg></a></div>
   <h1 class="page-title">Panti Terdekat</h1>
   <p class="page-sub">Kena order fiktif? Daripada dibuang, sedekahin aja ke panti asuhan di Kota dan Kabupaten Semarang.</p>
 
@@ -129,6 +129,7 @@
 </div>
 <div class="toast" id="toast" role="status"></div>
 
+<script src="adminlogin.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp }
@@ -209,9 +210,8 @@ onSnapshot(col, snap => {
 onAuthStateChanged(auth, u => { admin = !!u && u.uid === ADMIN_UID; $('adminbar').hidden = !admin; render(); });
 $('adminbtn').onclick = async () => {
   if (admin){ if (confirm('Keluar dari mode admin?')) await signOut(auth); return; }
-  const em = prompt('Email admin:'); if (!em) return;
-  const pw = prompt('Kata sandi admin:'); if (!pw) return;
-  try { await signInWithEmailAndPassword(auth, em.trim(), pw); toast(auth.currentUser.uid === ADMIN_UID ? 'Halo Admin!' : 'Akun ini bukan admin.'); }
+  const cred = await askAdminLogin(); if (!cred) return;
+  try { await signInWithEmailAndPassword(auth, cred.email, cred.pw); toast(auth.currentUser.uid === ADMIN_UID ? 'Halo Admin!' : 'Akun ini bukan admin.'); }
   catch(e){ toast('Email atau kata sandi salah.'); }
 };
 

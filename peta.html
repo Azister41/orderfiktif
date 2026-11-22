@@ -225,9 +225,13 @@
 <body>
 
 <script src="jateng.js"></script>
+<script src="adminlogin.js"></script>
 <script>
 // REGION ID teko login, contoh: "kota-semarang", "kota-surakarta", "kab-kudus"
-window.REGION_ID = localStorage.getItem('regionId') || localStorage.getItem('kotaAktif') || (JSON.parse(localStorage.getItem('radar_wilayah')||'{}').id) || 'kota-semarang';
+window.REGION_ID = (function(){
+  var id = localStorage.getItem('radar_selected_region') || (JSON.parse(localStorage.getItem('radar_wilayah')||'{}').id) || localStorage.getItem('regionId') || localStorage.getItem('kotaAktif') || 'kota-semarang';
+  return (typeof JATENG_REGIONS !== 'undefined' && JATENG_REGIONS[id]) ? id : 'kota-semarang';
+})();
 window.REGION = (typeof JATENG_REGIONS !== 'undefined' ? JATENG_REGIONS[window.REGION_ID] : null) || JATENG_REGIONS['kota-semarang'];
 window.KOTA_AKTIF = window.REGION_ID;
 window.KOTA_NAMA_PENDEK = window.REGION.shortName;
@@ -404,6 +408,11 @@ window.getPusatKota = function(){ return [window.REGION.center[0], window.REGION
     <span><strong>Peta titik fiktif</strong><small id="peta-count">Tandai lokasi titik di peta</small></span>
     <svg class="i go"><use href="#i-chev"/></svg>
   </a>
+  <a class="row" href="index.html" style="margin-top:12px">
+    <span class="bd"><svg class="i"><use href="#i-map"/></svg></span>
+    <span><strong>Ganti wilayah</strong><small id="wil-now">Pilih kota / kabupaten lain</small></span>
+    <svg class="i go"><use href="#i-chev"/></svg>
+  </a>
   <a class="row" href="panti.html" style="margin-top:12px">
     <span class="bd"><svg class="i"><use href="#i-heart"/></svg></span>
     <span><strong>Daripada Dibuang, Sedekahin Aja</strong><small>Cari panti terdekat dari posisi kamu</small></span>
@@ -518,7 +527,7 @@ const DEFAULT_REPORTS = [
 ];
 
 /* ---------- state ---------- */
-const STORAGE_KEY = 'radar_fiktif_' + window.KOTA_KEY + '_v1';
+const STORAGE_KEY = 'radar_fiktif_' + window.REGION_ID + '_v1';
 // koordinat contoh (perkiraan) untuk data bawaan
 const SEED_COORDS = {
   'rep-101': [-7.0520, 110.4560],
@@ -549,8 +558,8 @@ function loadReports(){
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) { reports = JSON.parse(saved); }
-    else { reports = DEFAULT_REPORTS.map(r => ({...r})); saveReports(); }
-  } catch (e) { reports = DEFAULT_REPORTS.map(r => ({...r})); }
+    else { reports = window.REGION_ID === 'kota-semarang' ? DEFAULT_REPORTS.map(r => ({...r})) : []; saveReports(); }
+  } catch (e) { reports = window.REGION_ID === 'kota-semarang' ? DEFAULT_REPORTS.map(r => ({...r})) : []; }
   let changed = false;
   reports.forEach(r => {
     if (r.lat == null && SEED_COORDS[r.id]) { r.lat = SEED_COORDS[r.id][0]; r.lng = SEED_COORDS[r.id][1]; changed = true; }
@@ -626,7 +635,7 @@ function matchReport(r, q){
 function renderList(){
   const q = $('#q').value.trim().toLowerCase();
   $('#q-clear').hidden = !q;
-  const rows = reports.filter(r => (!r.kota || r.kota === window.KOTA_AKTIF) && (activeFilter === 'Semua' || r.platform === activeFilter) && (!q || matchReport(r, q)));
+  const rows = reports.filter(r => (activeFilter === 'Semua' || r.platform === activeFilter) && (!q || matchReport(r, q)));
 
   $('#list-title').textContent = q ? 'Hasil pencarian' : 'Laporan terbaru';
   $('#list-count').textContent = rows.length + ' laporan';
@@ -751,7 +760,7 @@ async function geocode(q){
   try {
     const ctl = new AbortController();
     const t = setTimeout(() => ctl.abort(), 6000);
-    const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=id&bounded=1&viewbox=110.2,-6.9,110.65,-7.35&q=' + encodeURIComponent(q);
+    const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=id&bounded=1&viewbox=' + window.REGION.viewbox + '&q=' + encodeURIComponent(q);
     const res = await fetch(url, { signal: ctl.signal, headers: { 'Accept-Language': 'id' } });
     clearTimeout(t);
     const j = await res.json();
@@ -777,8 +786,13 @@ async function submitReport(e){
     const alamat = $('#rep-alamat').value.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
     const kec = $('#rep-kecamatan').value;
     toast('Mencari titik di peta...');
-    ll = await geocode(alamat + ', ' + kec + ', Semarang');
-    if (!ll){ ll = await geocode(kec + ', Semarang'); approx = !!ll; }
+    const wil = window.REGION.type + ' ' + window.REGION.name.replace(/\s*\(.*\)/, '');
+    if (kec && kec !== 'Lainnya'){
+      ll = await geocode(alamat + ', ' + kec + ', ' + wil);
+      if (!ll){ ll = await geocode(kec + ', ' + wil); approx = !!ll; }
+    } else {
+      ll = await geocode(alamat + ', ' + wil);
+    }
   }
   const now = new Date();
   const jam = String(now.getHours()).padStart(2, '0');
@@ -786,6 +800,7 @@ async function submitReport(e){
   const rep = {
     id: 'rep-' + Date.now(),
     kota: window.KOTA_AKTIF,
+    platform: repPlatform,
     kecamatan: $('#rep-kecamatan').value,
     modus: $('#rep-modus').value,
     alamat: $('#rep-alamat').value.trim(),
@@ -922,9 +937,8 @@ async function mintaPIN(){
     if (confirm('Keluar dari mode admin?')) await cloud.logout();
     return;
   }
-  const em = prompt('Email admin:'); if (!em) return;
-  const pw = prompt('Kata sandi admin:'); if (!pw) return;
-  const ok = await cloud.login(em.trim(), pw);
+  const cred = await askAdminLogin(); if (!cred) return;
+  const ok = await cloud.login(cred.email, cred.pw);
   alert(ok ? 'Halo Admin! Tombol hapus sudah muncul.' : 'Email atau kata sandi salah.');
 }
 // dipanggil modul Firebase tiap status login berubah
@@ -941,7 +955,7 @@ function refreshMarkers(fit){
     const box = document.createElement('div');
     box.className = 'pop';
     box.innerHTML = '<b>' + esc(r.alamat) + '</b>' + esc(r.kecamatan) + ', ' + esc(r.nominal) +
-     '"><a href="#/r/' + r.id + '">Buka detail</a>' + (isAdmin() ? '<button type="button">Hapus titik</button>' : '') + '</div>';
+     '<div class="pa"><a href="#/r/' + encodeURIComponent(r.id) + '">Buka detail</a>' + (isAdmin() ? '<button type="button">Hapus titik</button>' : '') + '</div>';
     const btnHapus = box.querySelector('button');
 if(btnHapus){
   btnHapus.addEventListener('click', () => {
@@ -1214,6 +1228,7 @@ async function seed(){
     const o = clean(r);
     if (SEED_COORDS[r.id]) { o.lat = SEED_COORDS[r.id][0]; o.lng = SEED_COORDS[r.id][1]; }
     o.createdAt = 1700000000000 - i;
+    o.kota = 'kota-semarang';
     batch.set(doc(db, 'reports', r.id), o);
   });
   await batch.commit();
@@ -1227,7 +1242,9 @@ onSnapshot(col, (snap) => {
   if (snap.empty && !seeded) { if (window.__admin) seed().catch(fail); return; }
 
   const mine = new Map(reports.map(r => [r.id, r.confirmedByMe]));
-  reports = snap.docs.map(d => ({ ...d.data(), id: d.id, confirmedByMe: !!mine.get(d.id) }));
+  // hanya laporan wilayah ini; data lama tanpa field kota dianggap Kota Semarang
+  reports = snap.docs.map(d => ({ ...d.data(), id: d.id, confirmedByMe: !!mine.get(d.id) }))
+    .filter(r => (r.kota || 'kota-semarang') === window.REGION_ID);
   reports.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   saveReports();
 
@@ -1240,6 +1257,7 @@ onSnapshot(col, (snap) => {
 <script>
 document.getElementById('heroTitle').innerHTML = window.REGION.heroTitle.join('<br>');
 document.title = 'Radar Order Fiktif - ' + window.REGION.shortName;
+var _w = document.getElementById('wil-now'); if (_w) _w.textContent = 'Sekarang: ' + window.REGION.shortName;
 
 var sel = document.getElementById('rep-kecamatan');
 if(sel && window.REGION && window.REGION.kecamatan){

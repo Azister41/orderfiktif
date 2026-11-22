@@ -2,24 +2,37 @@
 
 **Cek dulu sebelum jalan, hemat bensin.**
 
-Aplikasi web untuk driver ojol & kurir di Semarang Raya (Kota Semarang + Kab. Semarang / Ungaran) untuk cek risiko order dan lapor order fiktif agar driver lain tidak jadi korban.
+Aplikasi web untuk driver ojol & kurir di Jawa Tengah (35 kota/kabupaten) untuk cek risiko order dan lapor order fiktif, supaya driver lain tidak jadi korban.
 
-### ✨ Fitur
-- **Cek Risiko Order:** Hitung skor risiko dari nominal, lokasi, akun customer, chat & telepon.
-- **Lapor Fiktif Real-time:** Laporan langsung terlihat semua driver (Firestore).
-- **35 Kecamatan:** Lengkap Kota Semarang (16) + Kab. Semarang (19) termasuk Ungaran Barat & Ungaran Timur.
-- **Filter Platform:** ShopeeFood, Gojek, Grab, Maxim, Lainnya.
-- **Privasi Aman:** Tidak menyimpan nama, no HP, atau foto korban. Hanya area & pola penipuan.
+### Fitur
+- **Cek risiko order**: skor risiko dari nominal, lokasi, akun customer, chat & telepon.
+- **Lapor order fiktif (real-time)**: laporan langsung terlihat semua driver lewat Firestore, per wilayah.
+- **Titik di peta (Leaflet)**: dari GPS, dari pencarian alamat (OpenStreetMap), atau ditandai manual.
+- **Batas 3 laporan per hari per perangkat**, hanya admin yang bisa menghapus laporan.
+- **Panti terdekat** untuk sedekah makanan dari order fiktif (`panti.html`, data Kota & Kab. Semarang).
 
-### 🚀 Cara Pakai
-1. Buka link demo / clone repo ini.
-2. Pilih `Cek Risiko Order` sebelum ambil orderan.
-3. Kalau kena fiktif, pilih `Lapor Order Fiktif`.
+### Struktur file
+| File | Fungsi |
+|---|---|
+| `index.html` | Pilih wilayah, login / daftar driver, atau lihat tanpa login |
+| `peta.html` | Aplikasi utama (laporan, cek risiko, peta) |
+| `panti.html` | Daftar panti |
+| `admin.html` | ACC / tolak pengajuan driver (login email admin) |
+| `jateng.js` | Data 35 wilayah (pusat peta, kecamatan) |
+| `adminlogin.js` | Dialog login admin (dipakai `peta.html` dan `panti.html`) |
+| `firestore.rules` | Aturan keamanan Firestore |
+| `semarang.html`, `wilayah.html` | Halaman lama, sekarang hanya mengalihkan |
 
-### 🛠️ Tech Stack
-HTML, CSS (Tailwind), JavaScript, Firebase Firestore
+### Setup Firebase (sekali saja)
+1. **Authentication > Sign-in method**: aktifkan **Anonymous** dan **Email/Password**.
+2. Buat akun admin di **Authentication > Users**, salin UID-nya, lalu samakan dengan `ADMIN_UID` di `peta.html`, `panti.html`, `admin.html` dan `firestore.rules`.
+3. **Firestore Database > Rules**: tempel isi `firestore.rules`, tes di Rules Playground, lalu Publish.
+4. (Disarankan) Google Cloud Console > Credentials: batasi API key ke domain situs ini (HTTP referrer).
 
-### 🤝 Kontribusi
-Driver Semarang boleh banget bantuin! Silakan buat Issue kalau nemu titik fiktif baru atau Pull Request buat nambahin fitur.
+### Privasi
+Laporan tidak menyimpan nama atau foto korban, hanya area, nominal, dan pola penipuan. Pendaftaran driver menyimpan nama dan no. WA di koleksi yang hanya bisa dibaca admin.
 
-> Dibuat oleh driver, untuk driver Semarang. Semoga gak ada lagi yang zonk.
+### Tech stack
+HTML, CSS, JavaScript, Leaflet, Firebase (Firestore + Authentication).
+
+> Dibuat oleh driver, untuk driver. Semoga gak ada lagi yang zonk.
