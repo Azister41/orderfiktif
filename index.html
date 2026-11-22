@@ -3,6 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAJvwV16QykhyfJ42LmxU6WCIF9Vs5zzw",
+  authDomain: "orderfiktif.firebaseapp.com",
+  projectId: "orderfiktif",
+  storageBucket: "orderfiktif.firebasestorage.app",
+  messagingSenderId: "302212019912",
+  appId: "1:302212019912:web:8e104f4d4a3f7b017b57fd"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+</script>
   <title>Pilih Wilayah Jateng - Radar Order Fiktif</title>
   <style>
     * {
